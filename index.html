@@ -804,133 +804,21 @@
                         <tr>
                             <th>PR</th>
                             <th>Date</th>
-                            <th>Type</th>
                             <th>Description</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="pr-table-body">
                         <tr>
-                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/30066" target="_blank">#30066</a></td>
-                            <td class="card-date">Mar 2</td>
-                            <td><span class="card-tag tag-security">Security</span></td>
-                            <td>Tightened security validation and error messages in the GitHub CLI wrapper script.</td>
-                        </tr>
-                        <tr>
-                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/29462" target="_blank">#29462</a></td>
-                            <td class="card-date">Feb 28</td>
-                            <td><span class="card-tag tag-cleanup">Cleanup</span></td>
-                            <td>Removed an automated issue triage system that was no longer needed.</td>
-                        </tr>
-                        <tr>
-                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/28967" target="_blank">#28967</a></td>
-                            <td class="card-date">Feb 26</td>
-                            <td><span class="card-tag tag-bugfix">Fix</span></td>
-                            <td>Increased workflow timeouts to prevent premature failures.</td>
-                        </tr>
-                        <tr>
-                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/28756" target="_blank">#28756</a></td>
-                            <td class="card-date">Feb 25</td>
-                            <td><span class="card-tag tag-security">Security</span></td>
-                            <td>Removed unnecessary permission and migrated to a more secure wrapper.</td>
-                        </tr>
-                        <tr>
-                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/28533" target="_blank">#28533</a></td>
-                            <td class="card-date">Feb 25</td>
-                            <td><span class="card-tag tag-security">Security</span></td>
-                            <td>Added a secure wrapper to restrict GitHub CLI to approved commands only.</td>
-                        </tr>
-                        <tr>
-                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/28243" target="_blank">#28243</a></td>
-                            <td class="card-date">Feb 24</td>
-                            <td><span class="card-tag tag-security">Security</span></td>
-                            <td>Added workflow to flag PRs for security review when modifying user permissions.</td>
-                        </tr>
-                        <tr>
-                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/27911" target="_blank">#27911</a></td>
-                            <td class="card-date">Feb 23</td>
-                            <td><span class="card-tag tag-feature">Feature</span></td>
-                            <td>Refactored label operations to validate labels before applying them.</td>
-                        </tr>
-                        <tr>
-                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/26360" target="_blank">#26360</a></td>
-                            <td class="card-date">Feb 17</td>
-                            <td><span class="card-tag tag-bugfix">Fix</span></td>
-                            <td>Fixed bug where issues were auto-closed even when humans had responded.</td>
-                        </tr>
-                        <tr>
-                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/25665" target="_blank">#25665</a></td>
-                            <td class="card-date">Feb 14</td>
-                            <td><span class="card-tag tag-feature">Feature</span></td>
-                            <td>Added automated comments explaining lifecycle labels to users.</td>
-                        </tr>
-                        <tr>
-                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/25649" target="_blank">#25649</a></td>
-                            <td class="card-date">Feb 13</td>
-                            <td><span class="card-tag tag-bugfix">Fix</span></td>
-                            <td>Fixed crash when the sweep script tried to comment on locked issues.</td>
-                        </tr>
-                        <tr>
-                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/25352" target="_blank">#25352</a></td>
-                            <td class="card-date">Feb 12</td>
-                            <td><span class="card-tag tag-feature">Feature</span></td>
-                            <td>Unified issue triage and stale detection into a single streamlined system.</td>
-                        </tr>
-                        <tr>
-                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/25210" target="_blank">#25210</a></td>
-                            <td class="card-date">Feb 12</td>
-                            <td><span class="card-tag tag-feature">Feature</span></td>
-                            <td>Added daily sweep to auto-close issues exceeding lifecycle timeouts.</td>
-                        </tr>
-                        <tr>
-                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/25102" target="_blank">#25102</a></td>
-                            <td class="card-date">Feb 11</td>
-                            <td><span class="card-tag tag-bugfix">Fix</span></td>
-                            <td>Fixed bug where comments were posted even when not requested.</td>
-                        </tr>
-                        <tr>
-                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/22072" target="_blank">#22072</a></td>
-                            <td class="card-date">Feb 2</td>
-                            <td><span class="card-tag tag-docs">Docs</span></td>
-                            <td>Added example settings files to help users configure Claude Code.</td>
-                        </tr>
-                        <tr>
-                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/18489" target="_blank">#18489</a></td>
-                            <td class="card-date">Jan 16</td>
-                            <td><span class="card-tag tag-cleanup">Cleanup</span></td>
-                            <td>Applied minor maintenance fixes from code review feedback.</td>
-                        </tr>
-                        <tr>
-                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/18238" target="_blank">#18238</a></td>
-                            <td class="card-date">Jan 14</td>
-                            <td><span class="card-tag tag-feature">Feature</span></td>
-                            <td>Allowed non-write users to trigger GitHub Actions workflows.</td>
-                        </tr>
-                        <tr>
-                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/18209" target="_blank">#18209</a></td>
-                            <td class="card-date">Jan 14</td>
-                            <td><span class="card-tag tag-bugfix">Fix</span></td>
-                            <td>Fixed authentication failures in GitHub Actions by passing the token correctly.</td>
-                        </tr>
-                        <tr>
-                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/18206" target="_blank">#18206</a></td>
-                            <td class="card-date">Jan 14</td>
-                            <td><span class="card-tag tag-security">Security</span></td>
-                            <td>Added OIDC auth permission (later removed as unnecessary in PR #28756).</td>
-                        </tr>
-                        <tr>
-                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/18198" target="_blank">#18198</a></td>
-                            <td class="card-date">Jan 14</td>
-                            <td><span class="card-tag tag-feature">Feature</span></td>
-                            <td>Migrated all workflows from legacy action to claude-code-action@v1.</td>
-                        </tr>
-                        <tr>
-                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/17797" target="_blank">#17797</a></td>
-                            <td class="card-date">Jan 12</td>
-                            <td><span class="card-tag tag-docs">Docs</span></td>
-                            <td>Updated README with clearer installation instructions and new options.</td>
+                            <td colspan="3" class="card-date" style="text-align:center; padding:30px;">Loading latest PRs from GitHub...</td>
                         </tr>
                     </tbody>
                 </table>
+            </div>
+            <div class="cards" id="releases-container" style="margin-top: 24px;">
+                <div class="section-header" style="border-bottom: none; padding-bottom: 0;">
+                    <h3 style="font-size: 1.1em; color: var(--accent-purple);">Latest Releases</h3>
+                </div>
+                <div id="releases-list" class="card-date" style="padding: 12px;">Loading latest releases...</div>
             </div>
         </div>
 
@@ -1046,6 +934,68 @@
         }
 
         setTimeout(typeChar, 500);
+
+        // Fetch live PRs from GitHub API
+        async function fetchPRs() {
+            const tbody = document.getElementById('pr-table-body');
+            try {
+                const res = await fetch('https://api.github.com/repos/anthropics/claude-code/pulls?state=closed&sort=updated&direction=desc&per_page=30');
+                const pulls = await res.json();
+                const merged = pulls.filter(pr => pr.merged_at).slice(0, 20);
+
+                if (merged.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" class="card-date" style="text-align:center; padding:30px;">No merged PRs found.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = merged.map(pr => {
+                    const date = new Date(pr.merged_at);
+                    const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    const title = pr.title.length > 90 ? pr.title.slice(0, 90) + '...' : pr.title;
+                    return `<tr>
+                        <td class="pr-number"><a href="${pr.html_url}" target="_blank">#${pr.number}</a></td>
+                        <td class="card-date">${dateStr}</td>
+                        <td>${title}</td>
+                    </tr>`;
+                }).join('');
+            } catch (e) {
+                tbody.innerHTML = '<tr><td colspan="3" class="card-date" style="text-align:center; padding:30px;">Could not load PRs. <a href="https://github.com/anthropics/claude-code/pulls?q=is%3Apr+is%3Amerged" target="_blank">View on GitHub</a></td></tr>';
+            }
+        }
+
+        // Fetch latest releases from GitHub API
+        async function fetchReleases() {
+            const container = document.getElementById('releases-list');
+            try {
+                const res = await fetch('https://api.github.com/repos/anthropics/claude-code/releases?per_page=5');
+                const releases = await res.json();
+
+                if (releases.length === 0) {
+                    container.innerHTML = 'No releases found.';
+                    return;
+                }
+
+                container.innerHTML = releases.map(rel => {
+                    const date = new Date(rel.published_at);
+                    const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                    return `<div class="card" style="margin-bottom: 8px;">
+                        <div class="card-top">
+                            <span class="card-date">${dateStr}</span>
+                            <span class="card-tag tag-feature">Release</span>
+                        </div>
+                        <div class="card-title"><a href="${rel.html_url}" target="_blank">${rel.name || rel.tag_name}</a></div>
+                    </div>`;
+                }).join('');
+            } catch (e) {
+                container.innerHTML = 'Could not load releases. <a href="https://github.com/anthropics/claude-code/releases" target="_blank">View on GitHub</a>';
+            }
+        }
+
+        // Update the "last updated" timestamp
+        document.querySelector('.last-updated').textContent = 'PRs & releases update live | News last updated: March 10, 2026';
+
+        fetchPRs();
+        fetchReleases();
 
         // Add fun facts below certain sections
         const factsMap = {
