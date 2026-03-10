@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anthropic Hub — Your One-Stop Tracker</title>
+    <meta name="description" content="One-stop tracker for Anthropic: Claude model releases, Claude Code GitHub PRs, product launches, company news, and developer resources.">
+    <meta name="keywords" content="Anthropic, Claude, Claude Code, AI, LLM, Claude API, COBOL, Claude Opus, Claude Sonnet, Claude Haiku">
+    <meta property="og:title" content="Anthropic Hub — Your One-Stop Tracker">
+    <meta property="og:description" content="Track Anthropic model releases, Claude Code PRs, product updates, and company news in one place.">
+    <meta property="og:type" content="website">
+
+    <!-- Structured Data for AI readability -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "Anthropic Hub",
+        "description": "One-stop tracker for all Anthropic announcements, Claude model releases, GitHub pull requests, and product updates.",
+        "publisher": {
+            "@type": "Organization",
+            "name": "Anthropic Hub (Community)"
+        },
+        "about": {
+            "@type": "Organization",
+            "name": "Anthropic",
+            "url": "https://www.anthropic.com",
+            "description": "AI safety company that builds Claude, a family of large language models.",
+            "foundingDate": "2021",
+            "founders": [
+                { "@type": "Person", "name": "Dario Amodei", "jobTitle": "CEO" },
+                { "@type": "Person", "name": "Daniela Amodei", "jobTitle": "President" }
+            ]
+        },
+        "mainEntity": [
+            {
+                "@type": "SoftwareApplication",
+                "name": "Claude Opus 4.6",
+                "applicationCategory": "Large Language Model",
+                "datePublished": "2026-02-05",
+                "operatingSystem": "Cloud API",
+                "description": "Most capable Claude model with 1M token context window, strongest coding and planning capabilities."
+            },
+            {
+                "@type": "SoftwareApplication",
+                "name": "Claude Sonnet 4.6",
+                "applicationCategory": "Large Language Model",
+                "datePublished": "2026",
+                "description": "Best balance of speed and capability with 1M token context window."
+            },
+            {
+                "@type": "SoftwareApplication",
+                "name": "Claude Haiku 4.5",
+                "applicationCategory": "Large Language Model",
+                "datePublished": "2025",
+                "description": "Fastest Claude model for real-time and cost-sensitive applications."
+            },
+            {
+                "@type": "SoftwareSourceCode",
+                "name": "Claude Code",
+                "codeRepository": "https://github.com/anthropics/claude-code",
+                "programmingLanguage": "TypeScript",
+                "license": "https://github.com/anthropics/claude-code/blob/main/LICENSE.md",
+                "description": "Open-source agentic coding CLI tool by Anthropic."
+            }
+        ]
+    }
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        /* Dark mode (default) */
+        :root {
+            --primary: #d4a574;
+            --primary-dark: #c4915e;
+            --bg-dark: #1a1a2e;
+            --bg-card: #16213e;
+            --bg-card-hover: #1a2745;
+            --text: #e8e8e8;
+            --text-muted: #a0a0b0;
+            --accent-green: #4ecca3;
+            --accent-blue: #6c9bff;
+            --accent-purple: #b06cff;
+            --accent-orange: #ff8c42;
+            --accent-red: #ff6b6b;
+            --accent-teal: #45b7aa;
+            --header-bg: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #2d1b4e 100%);
+            --nav-bg: #12122a;
+            --nav-border: rgba(212,165,116,0.2);
+            --border-subtle: rgba(255,255,255,0.05);
+            --border-hover: rgba(255,255,255,0.1);
+            --row-hover: rgba(255,255,255,0.02);
+            --table-border: rgba(255,255,255,0.08);
+            --table-border-light: rgba(255,255,255,0.04);
+            --footer-border: rgba(255,255,255,0.05);
+            --ai-banner-bg: linear-gradient(135deg, rgba(176,108,255,0.1), rgba(108,155,255,0.1));
+            --ai-banner-border: rgba(176,108,255,0.2);
+            --fun-fact-bg: rgba(78,204,163,0.08);
+        }
+
+        /* Light mode */
+        [data-theme="light"] {
+            --primary: #9a6b3a;
+            --primary-dark: #7d5529;
+            --bg-dark: #f5f5f7;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f0f0f5;
+            --text: #1a1a2e;
+            --text-muted: #5a5a70;
+            --accent-green: #2a9d6e;
+            --accent-blue: #3b6fd4;
+            --accent-purple: #7b3ecf;
+            --accent-orange: #d4702e;
+            --accent-red: #d44545;
+            --accent-teal: #2e9488;
+            --header-bg: linear-gradient(135deg, #f8f6f3 0%, #efe8e0 50%, #e8dff0 100%);
+            --nav-bg: #ffffff;
+            --nav-border: rgba(154,107,58,0.15);
+            --border-subtle: rgba(0,0,0,0.08);
+            --border-hover: rgba(0,0,0,0.15);
+            --row-hover: rgba(0,0,0,0.02);
+            --table-border: rgba(0,0,0,0.1);
+            --table-border-light: rgba(0,0,0,0.05);
+            --footer-border: rgba(0,0,0,0.08);
+            --ai-banner-bg: linear-gradient(135deg, rgba(123,62,207,0.06), rgba(59,111,212,0.06));
+            --ai-banner-border: rgba(123,62,207,0.15);
+            --fun-fact-bg: rgba(42,157,110,0.06);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            line-height: 1.6;
+            transition: background 0.4s ease, color 0.4s ease;
+        }
+
+        .header, .nav, .card, .model-card, .link-card, .ai-banner, .fun-fact, .footer {
+            transition: background 0.4s ease, border-color 0.4s ease, color 0.4s ease;
+        }
+
+        /* Header */
+        .header {
+            background: var(--header-bg);
+            padding: 40px 20px;
+            text-align: center;
+            border-bottom: 2px solid var(--primary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at 30% 50%, rgba(212,165,116,0.08) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 50%, rgba(108,155,255,0.06) 0%, transparent 50%);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: var(--primary);
+            position: relative;
+            letter-spacing: 1px;
+        }
+
+        .header h1 span {
+            color: var(--text);
+            font-weight: 300;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 1.1em;
+            margin-top: 8px;
+            position: relative;
+        }
+
+        .last-updated {
+            color: var(--text-muted);
+            font-size: 0.85em;
+            margin-top: 12px;
+            position: relative;
+        }
+
+        /* Theme toggle */
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 50px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 1.2em;
+            color: var(--text);
+            transition: all 0.3s;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        [data-theme="light"] .theme-toggle {
+            background: rgba(0,0,0,0.06);
+            border-color: rgba(0,0,0,0.1);
+        }
+
+        [data-theme="light"] .card,
+        [data-theme="light"] .model-card,
+        [data-theme="light"] .link-card {
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+
+        [data-theme="light"] .header {
+            border-bottom-color: var(--primary);
+        }
+
+        [data-theme="light"] .nav {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.05);
+        }
+
+        .theme-toggle .toggle-label {
+            font-size: 0.7em;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        /* Navigation */
+        .nav {
+            background: var(--nav-bg);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--nav-border);
+        }
+
+        .nav a {
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+        }
+
+        .nav a:hover {
+            color: var(--primary);
+            background: rgba(212,165,116,0.1);
+            border-color: rgba(212,165,116,0.3);
+        }
+
+        /* Main layout */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        /* Section */
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--table-border);
+        }
+
+        .section-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3em;
+            flex-shrink: 0;
+        }
+
+        .section-header h2 {
+            font-size: 1.4em;
+            font-weight: 600;
+        }
+
+        .section-header .badge {
+            background: rgba(212,165,116,0.15);
+            color: var(--primary);
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            margin-left: auto;
+        }
+
+        /* Cards */
+        .cards {
+            display: grid;
+            gap: 12px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 10px;
+            padding: 18px 22px;
+            border: 1px solid var(--border-subtle);
+            transition: all 0.3s;
+            cursor: default;
+        }
+
+        .card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-hover);
+            transform: translateY(-1px);
+        }
+
+        .card a {
+            color: var(--accent-blue);
+            text-decoration: none;
+        }
+
+        .card a:hover {
+            text-decoration: underline;
+        }
+
+        .card-top {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .card-date {
+            color: var(--text-muted);
+            font-size: 0.82em;
+        }
+
+        .card-tag {
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-size: 0.75em;
+            font-weight: 600;
+        }
+
+        .tag-model { background: rgba(176,108,255,0.15); color: var(--accent-purple); }
+        .tag-product { background: rgba(108,155,255,0.15); color: var(--accent-blue); }
+        .tag-security { background: rgba(255,107,107,0.15); color: var(--accent-red); }
+        .tag-bugfix { background: rgba(78,204,163,0.15); color: var(--accent-green); }
+        .tag-feature { background: rgba(255,140,66,0.15); color: var(--accent-orange); }
+        .tag-news { background: rgba(212,165,116,0.15); color: var(--primary); }
+        .tag-cleanup { background: rgba(69,183,170,0.15); color: var(--accent-teal); }
+        .tag-docs { background: rgba(108,155,255,0.15); color: var(--accent-blue); }
+
+        .card-title {
+            font-weight: 600;
+            font-size: 1em;
+            margin-bottom: 4px;
+        }
+
+        .card-desc {
+            color: var(--text-muted);
+            font-size: 0.9em;
+        }
+
+        /* Model cards grid */
+        .model-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
+        }
+
+        .model-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid var(--border-subtle);
+            transition: all 0.3s;
+        }
+
+        .model-card:hover {
+            border-color: rgba(176,108,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .model-name {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: var(--accent-purple);
+            margin-bottom: 4px;
+        }
+
+        .model-date {
+            color: var(--text-muted);
+            font-size: 0.82em;
+            margin-bottom: 12px;
+        }
+
+        .model-specs {
+            list-style: none;
+        }
+
+        .model-specs li {
+            padding: 4px 0;
+            font-size: 0.9em;
+            color: var(--text-muted);
+        }
+
+        .model-specs li::before {
+            content: '>';
+            color: var(--accent-purple);
+            margin-right: 8px;
+            font-weight: bold;
+        }
+
+        /* Quick links */
+        .links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 12px;
+        }
+
+        .link-card {
+            background: var(--bg-card);
+            border-radius: 10px;
+            padding: 18px 22px;
+            border: 1px solid var(--border-subtle);
+            transition: all 0.3s;
+            text-decoration: none;
+            color: var(--text);
+            display: block;
+        }
+
+        .link-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            background: var(--bg-card-hover);
+        }
+
+        .link-card .link-icon {
+            font-size: 1.5em;
+            margin-bottom: 8px;
+        }
+
+        .link-card .link-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .link-card .link-desc {
+            color: var(--text-muted);
+            font-size: 0.85em;
+        }
+
+        /* PR table */
+        .pr-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .pr-table th {
+            text-align: left;
+            padding: 10px 14px;
+            color: var(--text-muted);
+            font-size: 0.8em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid var(--table-border);
+        }
+
+        .pr-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--table-border-light);
+            font-size: 0.9em;
+        }
+
+        .pr-table tr:hover td {
+            background: var(--row-hover);
+        }
+
+        .pr-number {
+            color: var(--accent-blue);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .pr-number a {
+            color: var(--accent-blue);
+            text-decoration: none;
+        }
+
+        .pr-number a:hover {
+            text-decoration: underline;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 30px 20px;
+            color: var(--text-muted);
+            font-size: 0.85em;
+            border-top: 1px solid var(--footer-border);
+            margin-top: 20px;
+        }
+
+        .footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .header h1 { font-size: 1.8em; }
+            .nav { gap: 4px; }
+            .nav a { padding: 6px 12px; font-size: 0.82em; }
+            .pr-table { font-size: 0.85em; }
+            .pr-table th:nth-child(3), .pr-table td:nth-child(3) { display: none; }
+        }
+
+        /* Scrollbar */
+        .table-scroll {
+            overflow-x: auto;
+        }
+
+        /* AI Assistant Banner */
+        .ai-banner {
+            background: var(--ai-banner-bg);
+            border: 1px solid var(--ai-banner-border);
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .ai-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            flex-shrink: 0;
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(176,108,255,0.3); }
+            50% { box-shadow: 0 0 20px 6px rgba(176,108,255,0.15); }
+        }
+
+        .ai-message {
+            font-size: 0.95em;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .ai-message strong {
+            color: var(--text);
+        }
+
+        .typing-text {
+            display: inline;
+        }
+
+        .typing-cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1em;
+            background: var(--accent-purple);
+            margin-left: 2px;
+            vertical-align: text-bottom;
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* Fun fact tooltip */
+        .fun-fact {
+            background: var(--fun-fact-bg);
+            border-left: 3px solid var(--accent-green);
+            border-radius: 0 8px 8px 0;
+            padding: 12px 18px;
+            margin-top: 16px;
+            font-size: 0.88em;
+            color: var(--text-muted);
+        }
+
+        .fun-fact strong {
+            color: var(--accent-green);
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header" role="banner">
+        <h1>Anthropic <span>Hub</span></h1>
+        <p>Your one-stop tracker for all things Anthropic</p>
+        <div class="last-updated">Last updated: March 10, 2026</div>
+        <button class="theme-toggle" id="theme-toggle" aria-label="Toggle light/dark mode">
+            <span id="theme-icon">&#9788;</span>
+            <span class="toggle-label" id="theme-label">LIGHT</span>
+        </button>
+    </div>
+
+    </header>
+
+    <nav class="nav" role="navigation" aria-label="Section navigation">
+        <a href="#news">Latest News</a>
+        <a href="#models">Models</a>
+        <a href="#products">Products</a>
+        <a href="#prs">GitHub PRs</a>
+        <a href="#links">Quick Links</a>
+    </nav>
+
+    <main class="container" role="main">
+
+        <!-- AI WELCOME BANNER -->
+        <div class="ai-banner">
+            <div class="ai-avatar">&#9679;</div>
+            <div class="ai-message">
+                <strong>Welcome to Anthropic Hub!</strong><br>
+                <span class="typing-text" id="ai-greeting"></span><span class="typing-cursor"></span>
+            </div>
+        </div>
+
+        <!-- LATEST NEWS -->
+        <section class="section" id="news" aria-label="Latest Anthropic News">
+            <div class="section-header">
+                <div class="section-icon" style="background: rgba(212,165,116,0.15);">&#9889;</div>
+                <h2>Latest News</h2>
+                <span class="badge">March 2026</span>
+            </div>
+            <div class="cards">
+                <div class="card">
+                    <div class="card-top">
+                        <span class="card-date">Mar 10, 2026</span>
+                        <span class="card-tag tag-news">Legal</span>
+                    </div>
+                    <div class="card-title">Bloomberg: "Anthropic Has Brought Something New to AI — The Power to Say No"</div>
+                    <div class="card-desc">Bloomberg opinion piece highlights Anthropic's stance on responsible AI development and its willingness to decline certain uses.</div>
+                </div>
+                <div class="card">
+                    <div class="card-top">
+                        <span class="card-date">Mar 9, 2026</span>
+                        <span class="card-tag tag-news">Legal</span>
+                    </div>
+                    <div class="card-title">Anthropic Sues Trump Administration Over Pentagon Blacklist</div>
+                    <div class="card-desc">Anthropic filed suit to reverse a Pentagon blacklisting that declared it a "supply chain risk," warning it could cut 2026 revenue by billions. <a href="https://www.cnbc.com/2026/03/09/anthropic-trump-claude-ai-supply-chain-risk.html" target="_blank">Read more</a></div>
+                </div>
+                <div class="card">
+                    <div class="card-top">
+                        <span class="card-date">Mar 6, 2026</span>
+                        <span class="card-tag tag-news">Partnership</span>
+                    </div>
+                    <div class="card-title">Google & Microsoft Confirm Continued Anthropic Partnership</div>
+                    <div class="card-desc">Both companies confirmed Anthropic remains available outside defense projects despite the Pentagon blacklisting. <a href="https://www.cnbc.com/2026/03/06/google-says-anthropic-remains-available-outside-of-defense-projects.html" target="_blank">Read more</a></div>
+                </div>
+                <div class="card">
+                    <div class="card-top">
+                        <span class="card-date">Feb 23, 2026</span>
+                        <span class="card-tag tag-product">Launch</span>
+                    </div>
+                    <div class="card-title">Anthropic Announces COBOL Modernization Capabilities</div>
+                    <div class="card-desc">Claude Code can now analyze and modernize legacy COBOL codebases. IBM stock dropped ~13% — its worst day in 26 years. <a href="https://resources.anthropic.com/code-modernization-playbook" target="_blank">Read the playbook</a></div>
+                </div>
+                <div class="card">
+                    <div class="card-top">
+                        <span class="card-date">Feb 2026</span>
+                        <span class="card-tag tag-security">Security</span>
+                    </div>
+                    <div class="card-title">24,000+ Fraudulent Accounts Discovered</div>
+                    <div class="card-desc">Anthropic uncovered evidence linking Chinese AI labs (DeepSeek, Moonshot AI, MiniMax) to over 24,000 fraudulent accounts generating 16M+ interactions.</div>
+                </div>
+            </div>
+        </div>
+
+        </section>
+
+        <!-- MODELS -->
+        <section class="section" id="models" aria-label="Claude Model Family">
+            <div class="section-header">
+                <div class="section-icon" style="background: rgba(176,108,255,0.15);">&#9881;</div>
+                <h2>Claude Model Family</h2>
+                <span class="badge">Latest Generation</span>
+            </div>
+            <div class="model-grid">
+                <div class="model-card">
+                    <div class="model-name">Claude Opus 4.6</div>
+                    <div class="model-date">Released Feb 5, 2026</div>
+                    <ul class="model-specs">
+                        <li>Most capable model — best for complex tasks</li>
+                        <li>1M token context window</li>
+                        <li>Strongest coding, planning & debugging</li>
+                        <li>Advanced financial analysis</li>
+                        <li>14.5-hour task completion horizon</li>
+                        <li>Model ID: claude-opus-4-6</li>
+                    </ul>
+                </div>
+                <div class="model-card">
+                    <div class="model-name">Claude Sonnet 4.6</div>
+                    <div class="model-date">Released 2026</div>
+                    <ul class="model-specs">
+                        <li>Best balance of speed and capability</li>
+                        <li>1M token context window (beta)</li>
+                        <li>Strong coding & computer use</li>
+                        <li>Long-context reasoning</li>
+                        <li>Agent planning & knowledge work</li>
+                        <li>Model ID: claude-sonnet-4-6</li>
+                    </ul>
+                </div>
+                <div class="model-card">
+                    <div class="model-name">Claude Haiku 4.5</div>
+                    <div class="model-date">Released 2025</div>
+                    <ul class="model-specs">
+                        <li>Fastest model — real-time applications</li>
+                        <li>Near-frontier performance</li>
+                        <li>Cost-sensitive deployments</li>
+                        <li>Ideal for high-volume tasks</li>
+                        <li>Model ID: claude-haiku-4-5-20251001</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        </section>
+
+        <!-- PRODUCTS -->
+        <section class="section" id="products" aria-label="Products and Features">
+            <div class="section-header">
+                <div class="section-icon" style="background: rgba(108,155,255,0.15);">&#9878;</div>
+                <h2>Products & Features</h2>
+            </div>
+            <div class="cards">
+                <div class="card">
+                    <div class="card-top">
+                        <span class="card-tag tag-product">Product</span>
+                    </div>
+                    <div class="card-title">Claude Code</div>
+                    <div class="card-desc">Agentic coding tool in your terminal. Open source on <a href="https://github.com/anthropics/claude-code" target="_blank">GitHub</a>. Understands codebases, executes tasks, handles git workflows. Now with voice support in 20 languages.</div>
+                </div>
+                <div class="card">
+                    <div class="card-top">
+                        <span class="card-tag tag-product">Product</span>
+                    </div>
+                    <div class="card-title">Claude Cowork</div>
+                    <div class="card-desc">Enterprise agent tool for HR, investment banking, and design. Plugins from FactSet, S&P Global, and PwC. Available to Pro plan users on Claude Desktop (macOS).</div>
+                </div>
+                <div class="card">
+                    <div class="card-top">
+                        <span class="card-tag tag-product">Product</span>
+                    </div>
+                    <div class="card-title">Claude in Microsoft Office</div>
+                    <div class="card-desc">Claude is available as an add-in for PowerPoint and Excel. Excel integration uses Opus 4.6 with native operations like pivot tables and conditional formatting.</div>
+                </div>
+                <div class="card">
+                    <div class="card-top">
+                        <span class="card-tag tag-product">Product</span>
+                    </div>
+                    <div class="card-title">claude.ai</div>
+                    <div class="card-desc">Consumer and Pro chat interface. Available at <a href="https://claude.ai" target="_blank">claude.ai</a>. Free, Pro, and Team plans available.</div>
+                </div>
+                <div class="card">
+                    <div class="card-top">
+                        <span class="card-tag tag-product">API</span>
+                    </div>
+                    <div class="card-title">Claude API</div>
+                    <div class="card-desc">Developer API for building AI-powered applications. Documentation at <a href="https://docs.anthropic.com" target="_blank">docs.anthropic.com</a>.</div>
+                </div>
+            </div>
+        </div>
+
+        </section>
+
+        <!-- GITHUB PRs -->
+        <section class="section" id="prs" aria-label="Latest GitHub Pull Requests">
+            <div class="section-header">
+                <div class="section-icon" style="background: rgba(78,204,163,0.15);">&#8984;</div>
+                <h2>Latest GitHub Pull Requests</h2>
+                <span class="badge">claude-code repo</span>
+            </div>
+            <div class="table-scroll">
+                <table class="pr-table">
+                    <thead>
+                        <tr>
+                            <th>PR</th>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/30066" target="_blank">#30066</a></td>
+                            <td class="card-date">Mar 2</td>
+                            <td><span class="card-tag tag-security">Security</span></td>
+                            <td>Tightened security validation and error messages in the GitHub CLI wrapper script.</td>
+                        </tr>
+                        <tr>
+                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/29462" target="_blank">#29462</a></td>
+                            <td class="card-date">Feb 28</td>
+                            <td><span class="card-tag tag-cleanup">Cleanup</span></td>
+                            <td>Removed an automated issue triage system that was no longer needed.</td>
+                        </tr>
+                        <tr>
+                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/28967" target="_blank">#28967</a></td>
+                            <td class="card-date">Feb 26</td>
+                            <td><span class="card-tag tag-bugfix">Fix</span></td>
+                            <td>Increased workflow timeouts to prevent premature failures.</td>
+                        </tr>
+                        <tr>
+                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/28756" target="_blank">#28756</a></td>
+                            <td class="card-date">Feb 25</td>
+                            <td><span class="card-tag tag-security">Security</span></td>
+                            <td>Removed unnecessary permission and migrated to a more secure wrapper.</td>
+                        </tr>
+                        <tr>
+                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/28533" target="_blank">#28533</a></td>
+                            <td class="card-date">Feb 25</td>
+                            <td><span class="card-tag tag-security">Security</span></td>
+                            <td>Added a secure wrapper to restrict GitHub CLI to approved commands only.</td>
+                        </tr>
+                        <tr>
+                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/28243" target="_blank">#28243</a></td>
+                            <td class="card-date">Feb 24</td>
+                            <td><span class="card-tag tag-security">Security</span></td>
+                            <td>Added workflow to flag PRs for security review when modifying user permissions.</td>
+                        </tr>
+                        <tr>
+                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/27911" target="_blank">#27911</a></td>
+                            <td class="card-date">Feb 23</td>
+                            <td><span class="card-tag tag-feature">Feature</span></td>
+                            <td>Refactored label operations to validate labels before applying them.</td>
+                        </tr>
+                        <tr>
+                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/26360" target="_blank">#26360</a></td>
+                            <td class="card-date">Feb 17</td>
+                            <td><span class="card-tag tag-bugfix">Fix</span></td>
+                            <td>Fixed bug where issues were auto-closed even when humans had responded.</td>
+                        </tr>
+                        <tr>
+                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/25665" target="_blank">#25665</a></td>
+                            <td class="card-date">Feb 14</td>
+                            <td><span class="card-tag tag-feature">Feature</span></td>
+                            <td>Added automated comments explaining lifecycle labels to users.</td>
+                        </tr>
+                        <tr>
+                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/25649" target="_blank">#25649</a></td>
+                            <td class="card-date">Feb 13</td>
+                            <td><span class="card-tag tag-bugfix">Fix</span></td>
+                            <td>Fixed crash when the sweep script tried to comment on locked issues.</td>
+                        </tr>
+                        <tr>
+                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/25352" target="_blank">#25352</a></td>
+                            <td class="card-date">Feb 12</td>
+                            <td><span class="card-tag tag-feature">Feature</span></td>
+                            <td>Unified issue triage and stale detection into a single streamlined system.</td>
+                        </tr>
+                        <tr>
+                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/25210" target="_blank">#25210</a></td>
+                            <td class="card-date">Feb 12</td>
+                            <td><span class="card-tag tag-feature">Feature</span></td>
+                            <td>Added daily sweep to auto-close issues exceeding lifecycle timeouts.</td>
+                        </tr>
+                        <tr>
+                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/25102" target="_blank">#25102</a></td>
+                            <td class="card-date">Feb 11</td>
+                            <td><span class="card-tag tag-bugfix">Fix</span></td>
+                            <td>Fixed bug where comments were posted even when not requested.</td>
+                        </tr>
+                        <tr>
+                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/22072" target="_blank">#22072</a></td>
+                            <td class="card-date">Feb 2</td>
+                            <td><span class="card-tag tag-docs">Docs</span></td>
+                            <td>Added example settings files to help users configure Claude Code.</td>
+                        </tr>
+                        <tr>
+                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/18489" target="_blank">#18489</a></td>
+                            <td class="card-date">Jan 16</td>
+                            <td><span class="card-tag tag-cleanup">Cleanup</span></td>
+                            <td>Applied minor maintenance fixes from code review feedback.</td>
+                        </tr>
+                        <tr>
+                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/18238" target="_blank">#18238</a></td>
+                            <td class="card-date">Jan 14</td>
+                            <td><span class="card-tag tag-feature">Feature</span></td>
+                            <td>Allowed non-write users to trigger GitHub Actions workflows.</td>
+                        </tr>
+                        <tr>
+                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/18209" target="_blank">#18209</a></td>
+                            <td class="card-date">Jan 14</td>
+                            <td><span class="card-tag tag-bugfix">Fix</span></td>
+                            <td>Fixed authentication failures in GitHub Actions by passing the token correctly.</td>
+                        </tr>
+                        <tr>
+                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/18206" target="_blank">#18206</a></td>
+                            <td class="card-date">Jan 14</td>
+                            <td><span class="card-tag tag-security">Security</span></td>
+                            <td>Added OIDC auth permission (later removed as unnecessary in PR #28756).</td>
+                        </tr>
+                        <tr>
+                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/18198" target="_blank">#18198</a></td>
+                            <td class="card-date">Jan 14</td>
+                            <td><span class="card-tag tag-feature">Feature</span></td>
+                            <td>Migrated all workflows from legacy action to claude-code-action@v1.</td>
+                        </tr>
+                        <tr>
+                            <td class="pr-number"><a href="https://github.com/anthropics/claude-code/pull/17797" target="_blank">#17797</a></td>
+                            <td class="card-date">Jan 12</td>
+                            <td><span class="card-tag tag-docs">Docs</span></td>
+                            <td>Updated README with clearer installation instructions and new options.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        </section>
+
+        <!-- QUICK LINKS -->
+        <section class="section" id="links" aria-label="Quick Links and Resources">
+            <div class="section-header">
+                <div class="section-icon" style="background: rgba(255,140,66,0.15);">&#9733;</div>
+                <h2>Quick Links</h2>
+            </div>
+            <div class="links-grid">
+                <a class="link-card" href="https://www.anthropic.com/news" target="_blank">
+                    <div class="link-icon">&#128240;</div>
+                    <div class="link-title">Anthropic News</div>
+                    <div class="link-desc">Official announcements, product launches, and company updates.</div>
+                </a>
+                <a class="link-card" href="https://www.anthropic.com/research" target="_blank">
+                    <div class="link-icon">&#128300;</div>
+                    <div class="link-title">Research Papers</div>
+                    <div class="link-desc">Technical papers on safety, interpretability, and Constitutional AI.</div>
+                </a>
+                <a class="link-card" href="https://github.com/anthropics/claude-code" target="_blank">
+                    <div class="link-icon">&#128187;</div>
+                    <div class="link-title">Claude Code (GitHub)</div>
+                    <div class="link-desc">Open source CLI tool. PRs, issues, and releases.</div>
+                </a>
+                <a class="link-card" href="https://github.com/anthropics/claude-code/releases" target="_blank">
+                    <div class="link-icon">&#128230;</div>
+                    <div class="link-title">Release Notes</div>
+                    <div class="link-desc">Every Claude Code version with detailed changelogs.</div>
+                </a>
+                <a class="link-card" href="https://docs.anthropic.com" target="_blank">
+                    <div class="link-icon">&#128214;</div>
+                    <div class="link-title">API Documentation</div>
+                    <div class="link-desc">Developer docs for building with the Claude API.</div>
+                </a>
+                <a class="link-card" href="https://support.claude.com/en/articles/12138966-release-notes" target="_blank">
+                    <div class="link-icon">&#128196;</div>
+                    <div class="link-title">Claude Release Notes</div>
+                    <div class="link-desc">Official product release notes from the Claude Help Center.</div>
+                </a>
+                <a class="link-card" href="https://claude.ai" target="_blank">
+                    <div class="link-icon">&#128172;</div>
+                    <div class="link-title">claude.ai</div>
+                    <div class="link-desc">Chat with Claude directly in your browser.</div>
+                </a>
+                <a class="link-card" href="https://resources.anthropic.com/code-modernization-playbook" target="_blank">
+                    <div class="link-icon">&#128218;</div>
+                    <div class="link-title">Code Modernization Playbook</div>
+                    <div class="link-desc">Guide to modernizing legacy codebases (including COBOL) with Claude.</div>
+                </a>
+            </div>
+        </div>
+
+        </section>
+
+    </main>
+
+    <footer class="footer" role="contentinfo">
+        <p>Built with Claude Code | Not affiliated with Anthropic | For educational purposes only</p>
+        <p style="margin-top: 6px;">Data sourced from <a href="https://github.com/anthropics/claude-code" target="_blank">GitHub</a>, <a href="https://www.anthropic.com/news" target="_blank">Anthropic News</a>, and public reporting.</p>
+    </footer>
+
+    <script>
+        // Theme toggle with localStorage persistence
+        const toggle = document.getElementById('theme-toggle');
+        const icon = document.getElementById('theme-icon');
+        const label = document.getElementById('theme-label');
+        const root = document.documentElement;
+
+        const savedTheme = localStorage.getItem('anthropic-hub-theme');
+        if (savedTheme === 'light') {
+            root.setAttribute('data-theme', 'light');
+            icon.innerHTML = '&#9790;';
+            label.textContent = 'DARK';
+        }
+
+        toggle.addEventListener('click', () => {
+            const isLight = root.getAttribute('data-theme') === 'light';
+            if (isLight) {
+                root.removeAttribute('data-theme');
+                icon.innerHTML = '&#9788;';
+                label.textContent = 'LIGHT';
+                localStorage.setItem('anthropic-hub-theme', 'dark');
+            } else {
+                root.setAttribute('data-theme', 'light');
+                icon.innerHTML = '&#9790;';
+                label.textContent = 'DARK';
+                localStorage.setItem('anthropic-hub-theme', 'light');
+            }
+        });
+
+        // AI typing effect for the welcome banner
+        const greetings = [
+            "I'm your AI-powered tracker for everything Anthropic. From model releases to GitHub PRs, I've got you covered!",
+            "Did you know? Claude Code is open source, but Claude's brain (the model) is Anthropic's secret sauce!",
+            "Tip: Scroll down to Quick Links for direct access to all Anthropic resources in one place.",
+            "Fun fact: Anthropic ships multiple Claude Code updates per week. That's one busy team!",
+            "The name 'Anthropic' comes from 'anthropic principle' in physics — the idea that the universe's laws are compatible with conscious life observing it."
+        ];
+
+        const greeting = greetings[Math.floor(Math.random() * greetings.length)];
+        const el = document.getElementById('ai-greeting');
+        let i = 0;
+
+        function typeChar() {
+            if (i < greeting.length) {
+                el.textContent += greeting.charAt(i);
+                i++;
+                setTimeout(typeChar, 25 + Math.random() * 20);
+            }
+        }
+
+        setTimeout(typeChar, 500);
+
+        // Add fun facts below certain sections
+        const factsMap = {
+            'models': 'Claude Opus 4.6 can work on tasks for up to 14.5 hours continuously — that\'s like having a developer who never takes a coffee break!',
+            'prs': 'Notice how many PRs focus on security? Anthropic practices what they preach — safety first, even in their open-source tooling.',
+            'news': 'Anthropic was founded in 2021 and has quickly become one of the leading AI companies, competing with OpenAI and Google DeepMind.'
+        };
+
+        Object.entries(factsMap).forEach(([sectionId, fact]) => {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                const factDiv = document.createElement('div');
+                factDiv.className = 'fun-fact';
+                factDiv.innerHTML = '<strong>AI Insight:</strong> ' + fact;
+                section.appendChild(factDiv);
+            }
+        });
+    </script>
+
+</body>
+</html>
