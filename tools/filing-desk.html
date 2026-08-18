@@ -98,6 +98,11 @@ input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid 
 .pill[data-st="urgent"],.pill[data-st="soon"]{background:var(--warn-bg);color:var(--warn)}
 .pill[data-st="upcoming"]{background:var(--chip);color:var(--ink2)}
 .pill[data-st="done"]{background:var(--ok-bg);color:var(--ok)}
+.stamp{font-size:.7rem;color:var(--ink3);font-weight:400;margin-left:.15rem;white-space:nowrap;display:inline-block}
+.mechip{font-size:.78rem;font-weight:600;color:var(--accent);background:var(--accent-soft);border:1px solid transparent;border-radius:99px;padding:.25rem .7rem}
+.mechip:hover{border-color:var(--accent)}
+.whobtns{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.8rem}
+.whobtns .btn{font-size:.9rem}
 .exp{color:var(--ink3);font-size:.8rem;padding:.2rem .4rem;border-radius:6px}
 .exp:hover{background:var(--surface2);color:var(--ink)}
 .rbody{border-top:1px solid var(--line);padding:.75rem .9rem .85rem;display:grid;gap:.8rem;grid-template-columns:1fr;font-size:.86rem}
@@ -159,7 +164,7 @@ table.ref td.mono{white-space:nowrap}
 <div id="app"></div>
 <div id="toast"></div>
 
-<script type="application/json" id="app-state">{"v":1,"companies":[],"records":{},"custom":[],"people":[],"settings":{"dueSoonDays":14}}</script>
+<script type="application/json" id="app-state">{"v":1,"companies":[{"name":"Nurothera","ticker":"NTLX","exchange":"TSXV","nv":false,"yeMonth":12,"yeDay":31,"since":"2026-08-17","assignee":"","id":"cmsy50zr1"}],"records":{},"custom":[],"people":[],"settings":{"dueSoonDays":14}}</script>
 
 <script id="app-js">
 (function(){
@@ -182,6 +187,16 @@ try { var s = sessionStorage.getItem('fd-ui'); if (s) { var p = JSON.parse(s); f
 
 var artifactNS = null, capReady = false, readOnly = false;
 var saveTimer = null, saveState = 'idle', pendingSave = false;
+
+var me = '';
+try { me = localStorage.getItem('fd-me') || ''; } catch(e){}
+function stampNow(){ return {by: me, at: new Date().toISOString()}; }
+function fmtStamp(v){
+  if (!v || typeof v !== 'object' || !v.by) return '';
+  var d = v.at ? new Date(v.at) : null;
+  var when = d && !isNaN(d) ? MS[d.getMonth()]+' '+d.getDate()+', '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0') : '';
+  return v.by + (when ? ' · '+when : '');
+}
 
 /* ---------- date helpers ---------- */
 var MN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -319,6 +334,7 @@ function render(){
   h += '<div class="actions"><span class="savechip" data-s="'+saveState+'">'+
        (readOnly ? 'Read-only' : saveState==='pending' ? 'Saving…' : saveState==='error' ? 'Save failed' : saveState==='saved' ? 'Saved' : 'Up to date')+'</span>';
   if (!readOnly) {
+    h += '<button class="mechip" data-action="open-whoami" title="Actions you take are recorded under this name">'+(me ? 'You: '+esc(me) : 'Set your name')+'</button>';
     h += '<button class="btn" data-action="open-settings">Team &amp; settings</button>';
     h += '<button class="btn" data-action="open-custom">Add one-off item</button>';
     h += '<button class="btn primary" data-action="open-company">Add company</button>';
@@ -411,7 +427,8 @@ function renderRow(it){
        (who?'<span class="chip">'+esc(who)+'</span>':'')+
        (late?'<span class="chip" style="background:var(--warn-bg);color:var(--warn)">Filed late</span>':'')+'</div>';
   h += '<span class="pill" data-st="'+st+'">'+ST_LBL[st]+'</span>';
-  h += '<div class="due"><div class="d">'+fmtD(it.due)+'</div><div class="rel">'+(st==='done'?(r.filedOn?'filed '+fmtD(fromIso(r.filedOn)):'filed'):relStr(d))+'</div></div>';
+  var doneTxt = st==='done' ? ('filed '+(r.filedOn?fmtD(fromIso(r.filedOn)):'')+(r.doneStamp&&r.doneStamp.by?' · '+r.doneStamp.by:'')) : relStr(d);
+  h += '<div class="due"><div class="d">'+fmtD(it.due)+'</div><div class="rel">'+esc(doneTxt)+'</div></div>';
   h += '<button class="exp" data-action="expand" data-k="'+esc(it.key)+'" aria-expanded="'+open+'">'+(open?'Close ▲':'Details ▼')+'</button>';
   h += '</div>';
   if (open) {
@@ -420,7 +437,8 @@ function renderRow(it){
     if (it.checklist.length) {
       it.checklist.forEach(function(sTxt,i){
         var on = r.checks && r.checks[i];
-        h += '<label class="step'+(on?' on':'')+'"><input type="checkbox" data-action="step" data-k="'+esc(it.key)+'" data-i="'+i+'"'+(on?' checked':'')+(readOnly?' disabled':'')+'><span>'+esc(sTxt)+'</span></label>';
+        var stp = on ? fmtStamp(on) : '';
+        h += '<label class="step'+(on?' on':'')+'"><input type="checkbox" data-action="step" data-k="'+esc(it.key)+'" data-i="'+i+'"'+(on?' checked':'')+(readOnly?' disabled':'')+'><span>'+esc(sTxt)+(stp?' <span class="stamp">'+esc(stp)+'</span>':'')+'</span></label>';
       });
     } else h += '<div style="color:var(--ink3)">No checklist for this item.</div>';
     h += '</div>';
@@ -513,6 +531,15 @@ function renderModal(){
     h += '<div class="fld"><label>Add person</label><div style="display:flex;gap:.5rem"><input id="m-person" type="text" placeholder="Name" style="flex:1"><button class="btn" data-action="add-person">Add</button></div></div>';
     h += '<div class="fld"><label>“Due soon” window (days)</label><input id="m-soon" type="number" min="3" max="60" value="'+state.settings.dueSoonDays+'"></div>';
     h += '<div class="foot"><button class="btn" data-action="close">Close</button><button class="btn primary" data-action="save-settings">Save</button></div>';
+  } else if (m === 'whoami') {
+    h += '<h2>Who are you?</h2><p style="font-size:.86rem;color:var(--ink2);margin-bottom:.9rem">Check-offs and filings you mark are recorded under this name so the team can see who did what. It is remembered on this device.</p>';
+    if (state.people.length) {
+      h += '<div class="whobtns">';
+      state.people.forEach(function(p){ h += '<button class="btn'+(p===me?' primary':'')+'" data-action="pick-me" data-k="'+esc(p)+'">'+esc(p)+'</button>'; });
+      h += '</div>';
+    }
+    h += '<div class="fld"><label>'+(state.people.length?'Or add yourself':'Your name')+'</label><div style="display:flex;gap:.5rem"><input id="m-me" type="text" placeholder="Name" style="flex:1"><button class="btn primary" data-action="save-me">That\'s me</button></div></div>';
+    h += '<div class="foot"><button class="btn" data-action="close">Cancel</button></div>';
   } else if (m === 'del-company') {
     var dc = coById(ui.edit);
     h += '<h2>Remove '+esc(dc?dc.name:'company')+'?</h2><p style="font-size:.88rem;color:var(--ink2)">This deletes the company, its generated calendar and its filing history from the dashboard. It cannot be undone.</p>';
@@ -524,9 +551,22 @@ function renderModal(){
 /* ---------- mutations & persistence ---------- */
 function mutate(fn){
   if (readOnly) { toast('Read-only view — this change was not saved.'); return; }
+  if (!me && ui.modal !== 'whoami') {
+    ui.modal = 'whoami'; render();
+    toast('First, tell the dashboard who you are — then redo that change.');
+    return;
+  }
   fn();
   render();
   scheduleSave();
+}
+function setMe(name){
+  name = (name || '').trim();
+  if (!name) return;
+  me = name;
+  try { localStorage.setItem('fd-me', me); } catch(e){}
+  if (state.people.indexOf(me) === -1) mutate(function(){ state.people.push(me); ui.modal = null; });
+  else { ui.modal = null; render(); }
 }
 function ensureRec(key){ if (!state.records[key]) state.records[key] = {}; return state.records[key]; }
 
@@ -588,8 +628,10 @@ document.addEventListener('click', function(e){
   else if (a === 'toggle-done') mutate(function(){
     var r = ensureRec(k);
     r.done = !r.done;
-    if (r.done && !r.filedOn) r.filedOn = iso(todayD());
-    if (!r.done) delete r.filedOn;
+    if (r.done) {
+      if (!r.filedOn) r.filedOn = iso(todayD());
+      r.doneStamp = stampNow();
+    } else { delete r.filedOn; delete r.doneStamp; }
   });
   else if (a === 'open-company') { ui.modal='company'; ui.edit=null; render(); }
   else if (a === 'edit-company') { ui.modal='company'; ui.edit=coById(k); render(); }
@@ -608,6 +650,9 @@ document.addEventListener('click', function(e){
     state.custom = state.custom.filter(function(x){ return String(x.id) !== String(k); });
     delete state.records['custom:'+k];
   });
+  else if (a === 'open-whoami') { ui.modal='whoami'; render(); }
+  else if (a === 'pick-me') setMe(k);
+  else if (a === 'save-me') setMe(document.getElementById('m-me').value);
   else if (a === 'open-settings') { ui.modal='settings'; render(); }
   else if (a === 'add-person') {
     var inp = document.getElementById('m-person');
@@ -630,7 +675,7 @@ document.addEventListener('change', function(e){
   else if (a === 'f-who') { ui.fWho = v; render(); }
   else if (a === 'f-st') { ui.fSt = v; render(); }
   else if (a === 'f-done') { ui.showDone = t.checked; render(); }
-  else if (a === 'step') mutate(function(){ var r = ensureRec(k); r.checks = r.checks || {}; if (t.checked) r.checks[t.dataset.i] = true; else delete r.checks[t.dataset.i]; });
+  else if (a === 'step') mutate(function(){ var r = ensureRec(k); r.checks = r.checks || {}; if (t.checked) r.checks[t.dataset.i] = stampNow(); else delete r.checks[t.dataset.i]; });
   else if (a === 'assign') mutate(function(){ ensureRec(k).assignee = v; });
   else if (a === 'filedon') mutate(function(){ var r = ensureRec(k); if (v) r.filedOn = v; else delete r.filedOn; });
   else if (a === 'note') mutate(function(){ var r = ensureRec(k); if (v) r.note = v; else delete r.note; });
@@ -677,6 +722,7 @@ if (window.claude && window.claude.use) {
   window.claude.use('artifact').then(function(ns){
     artifactNS = ns; capReady = true;
     if (!ns) { readOnly = true; render(); }
+    else if (!me && !ui.modal) { ui.modal = 'whoami'; render(); }
   });
 } else { capReady = true; readOnly = true; render(); }
 })();
