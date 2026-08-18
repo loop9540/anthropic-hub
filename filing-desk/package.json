@@ -1,0 +1,6 @@
+{
+  "name": "filing-desk",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Continuous disclosure tracker for TSXV and CSE issuers"
+}

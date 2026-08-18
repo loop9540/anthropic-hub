@@ -1,0 +1,773 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Filing Desk</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>&#128450;</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Spectral:wght@600&display=swap">
+<style id="app-css">
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F2F4F6; --surface:#FFFFFF; --surface2:#EAEEF1; --ink:#1B2733; --ink2:#51616E; --ink3:#7E8C98;
+  --line:#D9DFE5; --line2:#C7CFD6;
+  --accent:#0E6A60; --accent-soft:#DDEBE8; --accent-ink:#FFFFFF;
+  --danger:#B3372F; --danger-bg:#F7E8E6; --warn:#8A5B00; --warn-bg:#F5EDDA; --ok:#2E7D4F; --ok-bg:#E3F0E8;
+  --chip:#EDF1F4; --shadow:0 1px 2px rgba(27,39,51,.06),0 4px 14px rgba(27,39,51,.05);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#12181E; --surface:#1A222A; --surface2:#222C35; --ink:#E7ECF0; --ink2:#A2B1BD; --ink3:#73828F;
+    --line:#2D3841; --line2:#3A4650;
+    --accent:#43A896; --accent-soft:#1E3833; --accent-ink:#0C1512;
+    --danger:#E0796E; --danger-bg:#3A2320; --warn:#D9A84A; --warn-bg:#342B14; --ok:#66B586; --ok-bg:#1D3226;
+    --chip:#242F38; --shadow:0 1px 2px rgba(0,0,0,.35),0 4px 14px rgba(0,0,0,.25);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#12181E; --surface:#1A222A; --surface2:#222C35; --ink:#E7ECF0; --ink2:#A2B1BD; --ink3:#73828F;
+  --line:#2D3841; --line2:#3A4650;
+  --accent:#43A896; --accent-soft:#1E3833; --accent-ink:#0C1512;
+  --danger:#E0796E; --danger-bg:#3A2320; --warn:#D9A84A; --warn-bg:#342B14; --ok:#66B586; --ok-bg:#1D3226;
+  --chip:#242F38; --shadow:0 1px 2px rgba(0,0,0,.35),0 4px 14px rgba(0,0,0,.25);
+}
+html{font-size:16px}
+body{background:var(--bg);color:var(--ink);font-family:'Archivo',system-ui,-apple-system,sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+input,select{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line2);border-radius:6px;padding:.4rem .55rem}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.wrap{max-width:1060px;margin:0 auto;padding:1.25rem 1.25rem 4rem}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
+
+.masthead{display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;flex-wrap:wrap;padding:.5rem 0 1rem}
+.masthead h1{font-family:'Spectral',Georgia,serif;font-weight:600;font-size:1.7rem;letter-spacing:-.01em;text-wrap:balance}
+.masthead .sub{color:var(--ink2);font-size:.85rem;margin-top:.1rem}
+.masthead .actions{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:.4rem;padding:.45rem .8rem;border-radius:7px;font-weight:600;font-size:.85rem;border:1px solid var(--line2);background:var(--surface);color:var(--ink)}
+.btn:hover{border-color:var(--ink3)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn.danger{color:var(--danger);border-color:var(--danger)}
+.btn.small{padding:.25rem .55rem;font-size:.78rem;font-weight:500}
+.savechip{font-size:.75rem;color:var(--ink3);padding:.2rem .5rem;border-radius:99px;border:1px solid var(--line)}
+.savechip[data-s="pending"]{color:var(--warn);border-color:var(--warn)}
+.savechip[data-s="saved"]{color:var(--ok);border-color:var(--ok)}
+.savechip[data-s="error"]{color:var(--danger);border-color:var(--danger)}
+
+.banner{background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn);border-radius:8px;padding:.6rem .9rem;font-size:.85rem;margin-bottom:1rem}
+
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.7rem;margin-bottom:1.1rem}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:.8rem .95rem;box-shadow:var(--shadow)}
+.tile .num{font-family:'IBM Plex Mono',monospace;font-size:1.7rem;font-weight:600;line-height:1.15;font-variant-numeric:tabular-nums}
+.tile .lbl{font-size:.74rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--ink2);display:flex;align-items:center;gap:.35rem}
+.tile .dot{width:.55rem;height:.55rem;border-radius:50%;flex:none}
+.tile[data-k="overdue"] .num{color:var(--danger)} .tile[data-k="overdue"] .dot{background:var(--danger)}
+.tile[data-k="week"] .num{color:var(--warn)} .tile[data-k="week"] .dot{background:var(--warn)}
+.tile[data-k="month"] .dot{background:var(--ink3)}
+.tile[data-k="filed"] .num{color:var(--ok)} .tile[data-k="filed"] .dot{background:var(--ok)}
+
+.tabs{display:flex;gap:.15rem;border-bottom:1px solid var(--line);margin-bottom:1rem}
+.tab{padding:.5rem .9rem;font-weight:600;font-size:.88rem;color:var(--ink2);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+.tab:hover{color:var(--ink)}
+
+.filters{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-bottom:1rem;font-size:.85rem}
+.filters select{padding:.3rem .45rem;font-size:.85rem}
+.filters label.chk{display:inline-flex;align-items:center;gap:.35rem;color:var(--ink2);cursor:pointer}
+
+.mgroup{margin-bottom:1.2rem}
+.mgroup>h3{font-size:.78rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3);margin-bottom:.45rem}
+.rows{display:flex;flex-direction:column;gap:.45rem}
+.row{background:var(--surface);border:1px solid var(--line);border-left-width:4px;border-radius:9px;box-shadow:var(--shadow)}
+.row[data-st="overdue"]{border-left-color:var(--danger)}
+.row[data-st="urgent"]{border-left-color:var(--warn)}
+.row[data-st="soon"]{border-left-color:var(--warn)}
+.row[data-st="upcoming"]{border-left-color:var(--line2)}
+.row[data-st="done"]{border-left-color:var(--ok);opacity:.75}
+.rhead{display:flex;align-items:center;gap:.7rem;padding:.55rem .8rem;flex-wrap:wrap}
+.ck{width:1.35rem;height:1.35rem;border:2px solid var(--line2);border-radius:50%;flex:none;display:inline-flex;align-items:center;justify-content:center;font-size:.8rem;color:transparent}
+.ck:hover{border-color:var(--ok);color:var(--ok)}
+.row[data-st="done"] .ck{background:var(--ok);border-color:var(--ok);color:var(--surface)}
+.rtitle{font-weight:600;font-size:.92rem;flex:1 1 14rem;min-width:0}
+.rtitle .co{color:var(--ink2);font-weight:500}
+.chips{display:flex;gap:.3rem;flex-wrap:wrap}
+.chip{font-size:.7rem;font-weight:600;letter-spacing:.03em;padding:.1rem .45rem;border-radius:99px;background:var(--chip);color:var(--ink2);white-space:nowrap}
+.chip.ex{background:var(--accent-soft);color:var(--accent)}
+.due{text-align:right;flex:none;min-width:8.5rem}
+.due .d{font-family:'IBM Plex Mono',monospace;font-size:.83rem;font-weight:600;font-variant-numeric:tabular-nums}
+.due .rel{font-size:.72rem;color:var(--ink3)}
+.row[data-st="overdue"] .due .rel{color:var(--danger);font-weight:600}
+.row[data-st="urgent"] .due .rel,.row[data-st="soon"] .due .rel{color:var(--warn);font-weight:600}
+.pill{font-size:.7rem;font-weight:700;padding:.14rem .5rem;border-radius:99px;flex:none}
+.pill[data-st="overdue"]{background:var(--danger-bg);color:var(--danger)}
+.pill[data-st="urgent"],.pill[data-st="soon"]{background:var(--warn-bg);color:var(--warn)}
+.pill[data-st="upcoming"]{background:var(--chip);color:var(--ink2)}
+.pill[data-st="done"]{background:var(--ok-bg);color:var(--ok)}
+.stamp{font-size:.7rem;color:var(--ink3);font-weight:400;margin-left:.15rem;white-space:nowrap;display:inline-block}
+.mechip{font-size:.78rem;font-weight:600;color:var(--accent);background:var(--accent-soft);border:1px solid transparent;border-radius:99px;padding:.25rem .7rem}
+.mechip:hover{border-color:var(--accent)}
+.whobtns{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.8rem}
+.whobtns .btn{font-size:.9rem}
+.exp{color:var(--ink3);font-size:.8rem;padding:.2rem .4rem;border-radius:6px}
+.exp:hover{background:var(--surface2);color:var(--ink)}
+.rbody{border-top:1px solid var(--line);padding:.75rem .9rem .85rem;display:grid;gap:.8rem;grid-template-columns:1fr;font-size:.86rem}
+@media(min-width:720px){.rbody{grid-template-columns:1.4fr 1fr}}
+.steps{display:flex;flex-direction:column;gap:.3rem}
+.steps h4,.meta h4{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin-bottom:.25rem}
+.step{display:flex;align-items:flex-start;gap:.45rem;cursor:pointer}
+.step input{width:auto;accent-color:var(--accent);margin-top:.25rem}
+.step span{flex:1}
+.step.on span{color:var(--ink3);text-decoration:line-through}
+.meta{display:flex;flex-direction:column;gap:.55rem}
+.meta .fld{display:flex;flex-direction:column;gap:.2rem}
+.meta .fld label{font-size:.74rem;font-weight:600;color:var(--ink2)}
+.meta input,.meta select{font-size:.84rem}
+
+.cogrid{display:grid;gap:.8rem;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+.cocard{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:1rem;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:.6rem}
+.cocard h3{font-size:1.02rem;font-weight:700}
+.cocard .tk{color:var(--ink2);font-weight:500;font-size:.85rem}
+.cocard .facts{font-size:.8rem;color:var(--ink2);display:flex;gap:.4rem;flex-wrap:wrap}
+.cocard .next{border-top:1px solid var(--line);padding-top:.55rem;display:flex;flex-direction:column;gap:.3rem;font-size:.82rem}
+.cocard .next .n{display:flex;justify-content:space-between;gap:.6rem}
+.cocard .next .n .d{font-family:'IBM Plex Mono',monospace;font-size:.78rem;color:var(--ink2);flex:none;font-variant-numeric:tabular-nums}
+.cocard .foot{display:flex;gap:.4rem;margin-top:auto}
+.empty{background:var(--surface);border:1px dashed var(--line2);border-radius:12px;padding:2.2rem 1.5rem;text-align:center;color:var(--ink2)}
+.empty h3{color:var(--ink);font-size:1.05rem;margin-bottom:.35rem}
+.empty p{max-width:34rem;margin:0 auto .9rem;font-size:.9rem}
+
+.refwrap{display:flex;flex-direction:column;gap:1.3rem}
+.refcard{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:1rem 1.1rem;box-shadow:var(--shadow)}
+.refcard h3{font-size:.95rem;margin-bottom:.2rem}
+.refcard .note{font-size:.8rem;color:var(--ink2);margin-bottom:.6rem}
+.tscroll{overflow-x:auto}
+table.ref{border-collapse:collapse;width:100%;font-size:.84rem;min-width:540px}
+table.ref th{text-align:left;font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3);font-weight:700;padding:.35rem .6rem;border-bottom:1px solid var(--line2)}
+table.ref td{padding:.42rem .6rem;border-bottom:1px solid var(--line);vertical-align:top}
+table.ref td.mono{white-space:nowrap}
+
+.modalbg{position:fixed;inset:0;background:rgba(15,22,28,.45);display:flex;align-items:flex-start;justify-content:center;padding:4vh 1rem;z-index:50;overflow:auto}
+.modal{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);width:100%;max-width:470px;padding:1.2rem 1.3rem}
+.modal h2{font-size:1.1rem;margin-bottom:.9rem}
+.modal .fld{display:flex;flex-direction:column;gap:.25rem;margin-bottom:.75rem}
+.modal .fld label{font-size:.78rem;font-weight:600;color:var(--ink2)}
+.modal .grid2{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+.modal .foot{display:flex;justify-content:flex-end;gap:.5rem;margin-top:1rem}
+.modal .hint{font-size:.76rem;color:var(--ink3);margin-top:.15rem}
+.people{display:flex;flex-direction:column;gap:.4rem}
+.people .p{display:flex;align-items:center;gap:.5rem;background:var(--surface2);border-radius:7px;padding:.3rem .3rem .3rem .7rem}
+.people .p span{flex:1;font-size:.88rem}
+
+#toast{position:fixed;left:50%;bottom:1.2rem;transform:translateX(-50%);z-index:60;display:flex;flex-direction:column;gap:.4rem;align-items:center;pointer-events:none}
+.tmsg{background:var(--ink);color:var(--bg);padding:.55rem .95rem;border-radius:8px;font-size:.85rem;box-shadow:var(--shadow);max-width:90vw}
+@media (prefers-reduced-motion: no-preference){
+  .tmsg{animation:tin .18s ease-out}
+  @keyframes tin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast"></div>
+
+
+<script id="app-js">
+(function(){
+'use strict';
+
+/* ---------- state & session ---------- */
+var state = null;
+var VERSION = 0;
+function normalize(st){
+  st = st || {};
+  st.v = st.v || 1;
+  st.companies = st.companies || [];
+  st.records = st.records || {};
+  st.custom = st.custom || [];
+  st.people = st.people || [];
+  st.settings = st.settings || {};
+  if (typeof st.settings.dueSoonDays !== 'number') st.settings.dueSoonDays = 14;
+  return st;
+}
+
+var ui = {tab:'deadlines', fCo:'', fWho:'', fSt:'', showDone:false, open:{}, modal:null, edit:null};
+try { var s = sessionStorage.getItem('fd-ui'); if (s) { var p = JSON.parse(s); for (var k in p) ui[k] = p[k]; ui.modal = null; ui.edit = null; } } catch(e){}
+
+var readOnly = false;
+var saveTimer = null, saveState = 'idle', pendingSave = false;
+
+var me = '';
+try { me = localStorage.getItem('fd-me') || ''; } catch(e){}
+function stampNow(){ return {by: me, at: new Date().toISOString()}; }
+function fmtStamp(v){
+  if (!v || typeof v !== 'object' || !v.by) return '';
+  var d = v.at ? new Date(v.at) : null;
+  var when = d && !isNaN(d) ? MS[d.getMonth()]+' '+d.getDate()+', '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0') : '';
+  return v.by + (when ? ' · '+when : '');
+}
+
+/* ---------- date helpers ---------- */
+var MN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+var MS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function mkDate(y,m,d){ return new Date(y, m-1, d, 12, 0, 0); }
+function daysInMonth(y,m){ return new Date(y, m, 0).getDate(); }
+function addDays(dt,n){ var d = new Date(dt); d.setDate(d.getDate()+n); return d; }
+function todayD(){ var n = new Date(); return mkDate(n.getFullYear(), n.getMonth()+1, n.getDate()); }
+function iso(dt){ return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'); }
+function fromIso(s){ var p = s.split('-'); return mkDate(+p[0], +p[1], +p[2]); }
+function fmtD(dt){ return MS[dt.getMonth()]+' '+dt.getDate()+', '+dt.getFullYear(); }
+function daysUntil(dt){ return Math.round((dt - todayD()) / 86400000); }
+function relStr(n){
+  if (n === 0) return 'due today';
+  if (n === 1) return 'due tomorrow';
+  if (n > 1) return 'in '+n+' days';
+  if (n === -1) return '1 day overdue';
+  return (-n)+' days overdue';
+}
+function monthShift(y,m,delta){ var t = (y*12 + (m-1)) + delta; return {y: Math.floor(t/12), m: (t%12+12)%12 + 1}; }
+function fifthTradingDay(y,m){
+  var count = 0, d = 1, dim = daysInMonth(y,m);
+  while (d <= dim) {
+    var dow = mkDate(y,m,d).getDay();
+    if (dow !== 0 && dow !== 6) { count++; if (count === 5) return mkDate(y,m,d); }
+    d++;
+  }
+  return mkDate(y,m,dim);
+}
+
+/* ---------- checklist templates ---------- */
+var CHK = {
+  annual: ['Close the books; working papers to auditor','Audit fieldwork complete / auditor clearance','Draft annual financial statements','Draft annual MD&A','Audit committee review and recommendation','Board approval of statements and MD&A','CEO/CFO annual certifications signed','File statements + MD&A + certifications on SEDAR+'],
+  interim: ['Prepare interim financial statements','Interim MD&A (or quarterly highlights)','Audit committee / board approval','CEO/CFO interim certifications signed','File on SEDAR+'],
+  form7: ['Draft Form 7 monthly progress report','Sign Form 6 certificate of compliance','Post both on CSE portal before open of 5th trading day'],
+  execcomp: ['Compile compensation data','Draft Form 51-102F6V (venture) / F6','Committee and board sign-off','File on SEDAR+ (or include in information circular)'],
+  aif: ['Draft AIF (Form 51-102F2)','Board approval','File on SEDAR+'],
+  agm: ['Set record date and meeting date (check exchange notice rules)','Draft information circular (51-102F5) and proxy','NI 54-101 beneficial-owner delivery / notice-and-access','File meeting materials on SEDAR+ when sent','Hold the meeting','File report of voting results']
+};
+
+/* ---------- schedule generation ---------- */
+function companySenior(c){ return c.exchange === 'CSE' && !!c.nv; }
+function schedForCompany(c){
+  var items = [];
+  var senior = companySenior(c);
+  var t = todayD();
+  var lo = addDays(t, -285), hi = addDays(t, 400);
+  var yeM = c.yeMonth, yeD = c.yeDay;
+  var y0 = t.getFullYear();
+  for (var y = y0-2; y <= y0+2; y++) {
+    var fye = mkDate(y, yeM, Math.min(yeD, daysInMonth(y, yeM)));
+    var fy = 'FY'+y;
+    push(items, c, 'annual', fy, fye, addDays(fye, senior?90:120),
+      'Annual financial statements + MD&A + certifications', CHK.annual, 'Financials');
+    push(items, c, 'execcomp', fy, fye, addDays(fye, senior?140:180),
+      'Executive compensation disclosure', CHK.execcomp, 'Governance');
+    if (senior) push(items, c, 'aif', fy, fye, addDays(fye, 90), 'Annual Information Form', CHK.aif, 'Governance');
+    push(items, c, 'agm', fy, fye, addDays(fye, 180), 'AGM held, circular sent, voting results filed', CHK.agm, 'Governance');
+    for (var qi = 1; qi <= 3; qi++) {
+      var sh = monthShift(y, yeM, -3*(4-qi));
+      var qEnd = mkDate(sh.y, sh.m, Math.min(yeD, daysInMonth(sh.y, sh.m)));
+      push(items, c, 'q'+qi, fy, qEnd, addDays(qEnd, senior?45:60),
+        'Q'+qi+' interim statements + MD&A + certifications', CHK.interim, 'Financials');
+    }
+  }
+  if (c.exchange === 'CSE') {
+    for (var off = -8; off <= 13; off++) {
+      var now = todayD();
+      var ms = monthShift(now.getFullYear(), now.getMonth()+1, off);
+      var due = fifthTradingDay(ms.y, ms.m);
+      var prev = monthShift(ms.y, ms.m, -1);
+      var pe = mkDate(prev.y, prev.m, daysInMonth(prev.y, prev.m));
+      push(items, c, 'form7', MS[prev.m-1]+' '+prev.y, pe, due,
+        'CSE Form 7 monthly progress report + Form 6', CHK.form7, 'Exchange');
+    }
+  }
+  var since = c.since ? fromIso(c.since) : null;
+  return items.filter(function(it){ return it.due >= lo && it.due <= hi && (!since || it.due >= since); });
+}
+function push(arr, c, type, period, periodEnd, due, title, checklist, cat){
+  arr.push({ key: c.id+':'+type+':'+iso(periodEnd), companyId: c.id, type: type,
+    period: period, due: due, title: title, checklist: checklist, cat: cat });
+}
+function allItems(){
+  var items = [];
+  state.companies.forEach(function(c){ items = items.concat(schedForCompany(c)); });
+  state.custom.forEach(function(x){
+    items.push({ key: 'custom:'+x.id, companyId: x.companyId || '', type: 'custom',
+      period: '', due: fromIso(x.due), title: x.title, checklist: [], cat: 'Custom', customId: x.id });
+  });
+  items.sort(function(a,b){ return a.due - b.due; });
+  return items;
+}
+function rec(key){ return state.records[key]; }
+function statusOf(it){
+  var r = rec(it.key);
+  if (r && r.done) return 'done';
+  var d = daysUntil(it.due);
+  if (d < 0) return 'overdue';
+  if (d <= 7) return 'urgent';
+  if (d <= state.settings.dueSoonDays) return 'soon';
+  return 'upcoming';
+}
+var ST_LBL = {overdue:'Overdue', urgent:'Due this week', soon:'Due soon', upcoming:'Upcoming', done:'Filed'};
+
+/* ---------- rendering ---------- */
+function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function coById(id){ for (var i=0;i<state.companies.length;i++) if (state.companies[i].id===id) return state.companies[i]; return null; }
+function coLabel(c){ return c ? (c.ticker ? c.ticker : c.name) : ''; }
+function exChip(c){
+  if (!c) return '';
+  var t = c.exchange === 'CSE' ? (c.nv ? 'CSE · NV' : 'CSE') : 'TSXV';
+  return '<span class="chip ex">'+t+'</span>';
+}
+function personOpts(sel){
+  var h = '<option value="">Unassigned</option>';
+  state.people.forEach(function(p){ h += '<option value="'+esc(p)+'"'+(p===sel?' selected':'')+'>'+esc(p)+'</option>'; });
+  return h;
+}
+
+function render(){
+  var items = allItems();
+  var t = todayD();
+  var counts = {overdue:0, week:0, month:0, filed:0};
+  items.forEach(function(it){
+    var st = statusOf(it);
+    if (st === 'done') { var r = rec(it.key); if (r && r.filedOn && fromIso(r.filedOn).getFullYear() === t.getFullYear()) counts.filed++; return; }
+    var d = daysUntil(it.due);
+    if (d < 0) counts.overdue++;
+    else { if (d <= 7) counts.week++; if (d <= 30) counts.month++; }
+  });
+
+  var h = '<div class="wrap">';
+  h += '<header class="masthead"><div><h1>Filing Desk</h1><div class="sub">Continuous disclosure tracker — TSXV &amp; CSE issuers</div></div>';
+  h += '<div class="actions"><span class="savechip" data-s="'+saveState+'">'+
+       (readOnly ? 'Read-only' : saveState==='pending' ? 'Saving…' : saveState==='error' ? 'Save failed' : saveState==='saved' ? 'Saved' : 'Up to date')+'</span>';
+  if (!readOnly) {
+    h += '<button class="mechip" data-action="open-whoami" title="Actions you take are recorded under this name">'+(me ? 'You: '+esc(me) : 'Set your name')+'</button>';
+    h += '<button class="btn" data-action="open-settings">Team &amp; settings</button>';
+    h += '<button class="btn" data-action="open-custom">Add one-off item</button>';
+    h += '<button class="btn primary" data-action="open-company">Add company</button>';
+  }
+  h += '</div></header>';
+
+  if (readOnly) h += '<div class="banner">This view is read-only — changes here will not be saved. Ask the dashboard owner for edit access.</div>';
+
+  h += '<div class="tiles">'+
+    tile('overdue','Overdue',counts.overdue)+
+    tile('week','Due in 7 days',counts.week)+
+    tile('month','Due in 30 days',counts.month)+
+    tile('filed','Filed in '+t.getFullYear(),counts.filed)+
+    '</div>';
+
+  h += '<nav class="tabs" role="tablist">'+tab('deadlines','Deadlines')+tab('companies','Companies')+tab('reference','Reference')+'</nav>';
+
+  if (ui.tab === 'deadlines') h += renderDeadlines(items);
+  else if (ui.tab === 'companies') h += renderCompanies(items);
+  else h += renderReference();
+
+  h += '</div>';
+  h += renderModal();
+  document.getElementById('app').innerHTML = h;
+}
+function tile(k,lbl,n){ return '<div class="tile" data-k="'+k+'"><div class="lbl"><span class="dot"></span>'+lbl+'</div><div class="num">'+n+'</div></div>'; }
+function tab(id,lbl){ return '<button class="tab" role="tab" aria-selected="'+(ui.tab===id)+'" data-action="tab" data-v="'+id+'">'+lbl+'</button>'; }
+
+function renderDeadlines(items){
+  var h = '<div class="filters">';
+  h += '<select data-action="f-co"><option value="">All companies</option>';
+  state.companies.forEach(function(c){ h += '<option value="'+c.id+'"'+(ui.fCo===c.id?' selected':'')+'>'+esc(c.name)+'</option>'; });
+  h += '</select>';
+  h += '<select data-action="f-who"><option value="">Everyone</option>';
+  state.people.forEach(function(p){ h += '<option value="'+esc(p)+'"'+(ui.fWho===p?' selected':'')+'>'+esc(p)+'</option>'; });
+  h += '</select>';
+  h += '<select data-action="f-st"><option value="">Any status</option>';
+  ['overdue','urgent','soon','upcoming'].forEach(function(s){ h += '<option value="'+s+'"'+(ui.fSt===s?' selected':'')+'>'+ST_LBL[s]+'</option>'; });
+  h += '</select>';
+  h += '<label class="chk"><input type="checkbox" data-action="f-done"'+(ui.showDone?' checked':'')+'> Show filed</label>';
+  h += '</div>';
+
+  var visible = items.filter(function(it){
+    var st = statusOf(it);
+    if (st === 'done' && !ui.showDone) return false;
+    if (ui.fCo && it.companyId !== ui.fCo) return false;
+    if (ui.fSt && st !== ui.fSt) return false;
+    if (ui.fWho) {
+      var r = rec(it.key); var who = (r && r.assignee) || (coById(it.companyId)||{}).assignee || '';
+      if (who !== ui.fWho) return false;
+    }
+    return true;
+  });
+
+  if (!state.companies.length && !state.custom.length) {
+    return h + '<div class="empty"><h3>No companies yet</h3><p>Add each company you manage — its exchange (TSXV or CSE), tier and financial year-end — and Filing Desk builds the full filing calendar automatically: annual and interim statements, MD&amp;A, certifications, executive compensation, AGM, and CSE monthly Form 7s.</p>'+(!readOnly?'<button class="btn primary" data-action="open-company">Add your first company</button>':'')+'</div>';
+  }
+  if (!visible.length) return h + '<div class="empty"><h3>Nothing matches these filters</h3><p>Clear a filter or turn on “Show filed”.</p></div>';
+
+  var byMonth = {};
+  var order = [];
+  visible.forEach(function(it){
+    var mk = it.due.getFullYear()+'-'+String(it.due.getMonth()+1).padStart(2,'0');
+    if (!byMonth[mk]) { byMonth[mk] = []; order.push(mk); }
+    byMonth[mk].push(it);
+  });
+  order.forEach(function(mk){
+    var d0 = byMonth[mk][0].due;
+    h += '<section class="mgroup"><h3>'+MN[d0.getMonth()]+' '+d0.getFullYear()+'</h3><div class="rows">';
+    byMonth[mk].forEach(function(it){ h += renderRow(it); });
+    h += '</div></section>';
+  });
+  return h;
+}
+
+function renderRow(it){
+  var st = statusOf(it);
+  var r = rec(it.key) || {};
+  var c = coById(it.companyId);
+  var open = !!ui.open[it.key];
+  var d = daysUntil(it.due);
+  var who = r.assignee || (c && c.assignee) || '';
+  var late = r.done && r.filedOn && fromIso(r.filedOn) > it.due;
+  var h = '<article class="row" data-st="'+st+'">';
+  h += '<div class="rhead">';
+  h += '<button class="ck" data-action="toggle-done" data-k="'+esc(it.key)+'" title="'+(r.done?'Mark not filed':'Mark filed')+'" aria-label="'+(r.done?'Mark not filed':'Mark filed')+'">✓</button>';
+  h += '<div class="rtitle">'+esc(it.title)+(it.period?' <span class="co">· '+esc(it.period)+'</span>':'')+'</div>';
+  h += '<div class="chips">'+(c?'<span class="chip">'+esc(coLabel(c))+'</span>'+exChip(c):'')+
+       '<span class="chip">'+esc(it.cat)+'</span>'+
+       (who?'<span class="chip">'+esc(who)+'</span>':'')+
+       (late?'<span class="chip" style="background:var(--warn-bg);color:var(--warn)">Filed late</span>':'')+'</div>';
+  h += '<span class="pill" data-st="'+st+'">'+ST_LBL[st]+'</span>';
+  var doneTxt = st==='done' ? ('filed '+(r.filedOn?fmtD(fromIso(r.filedOn)):'')+(r.doneStamp&&r.doneStamp.by?' · '+r.doneStamp.by:'')) : relStr(d);
+  h += '<div class="due"><div class="d">'+fmtD(it.due)+'</div><div class="rel">'+esc(doneTxt)+'</div></div>';
+  h += '<button class="exp" data-action="expand" data-k="'+esc(it.key)+'" aria-expanded="'+open+'">'+(open?'Close ▲':'Details ▼')+'</button>';
+  h += '</div>';
+  if (open) {
+    h += '<div class="rbody">';
+    h += '<div class="steps"><h4>Checklist</h4>';
+    if (it.checklist.length) {
+      it.checklist.forEach(function(sTxt,i){
+        var on = r.checks && r.checks[i];
+        var stp = on ? fmtStamp(on) : '';
+        h += '<label class="step'+(on?' on':'')+'"><input type="checkbox" data-action="step" data-k="'+esc(it.key)+'" data-i="'+i+'"'+(on?' checked':'')+(readOnly?' disabled':'')+'><span>'+esc(sTxt)+(stp?' <span class="stamp">'+esc(stp)+'</span>':'')+'</span></label>';
+      });
+    } else h += '<div style="color:var(--ink3)">No checklist for this item.</div>';
+    h += '</div>';
+    h += '<div class="meta">';
+    h += '<div class="fld"><label>Assigned to</label><select data-action="assign" data-k="'+esc(it.key)+'"'+(readOnly?' disabled':'')+'>'+personOpts(who)+'</select></div>';
+    h += '<div class="fld"><label>Filed on</label><input type="date" value="'+esc(r.filedOn||'')+'" data-action="filedon" data-k="'+esc(it.key)+'"'+(readOnly?' disabled':'')+'></div>';
+    h += '<div class="fld"><label>Note</label><input type="text" value="'+esc(r.note||'')+'" placeholder="e.g. waiting on auditor" data-action="note" data-k="'+esc(it.key)+'"'+(readOnly?' disabled':'')+'></div>';
+    if (it.type === 'custom' && !readOnly) h += '<div><button class="btn small danger" data-action="del-custom" data-k="'+esc(it.customId)+'">Delete item</button></div>';
+    h += '</div></div>';
+  }
+  h += '</article>';
+  return h;
+}
+
+function renderCompanies(items){
+  if (!state.companies.length) return '<div class="empty"><h3>No companies yet</h3><p>Add the companies whose filings you manage.</p>'+(!readOnly?'<button class="btn primary" data-action="open-company">Add company</button>':'')+'</div>';
+  var h = '<div class="cogrid">';
+  state.companies.forEach(function(c){
+    var next = items.filter(function(it){ return it.companyId===c.id && statusOf(it)!=='done'; }).slice(0,4);
+    h += '<div class="cocard"><div><h3>'+esc(c.name)+' <span class="tk">'+esc(c.ticker||'')+'</span></h3></div>';
+    h += '<div class="facts">'+exChip(c)+'<span class="chip">Year-end '+MS[c.yeMonth-1]+' '+c.yeDay+'</span>'+(c.assignee?'<span class="chip">'+esc(c.assignee)+'</span>':'')+'</div>';
+    h += '<div class="next">';
+    if (next.length) next.forEach(function(it){
+      var st = statusOf(it);
+      h += '<div class="n"><span>'+esc(it.title)+'</span><span class="d"'+(st==='overdue'?' style="color:var(--danger);font-weight:600"':'')+'>'+fmtD(it.due)+'</span></div>';
+    });
+    else h += '<div style="color:var(--ink3)">Nothing outstanding in the window.</div>';
+    h += '</div>';
+    if (!readOnly) h += '<div class="foot"><button class="btn small" data-action="edit-company" data-k="'+c.id+'">Edit</button><button class="btn small danger" data-action="ask-del-company" data-k="'+c.id+'">Remove</button></div>';
+    h += '</div>';
+  });
+  return h + '</div>';
+}
+
+function renderReference(){
+  var h = '<div class="refwrap">';
+  h += '<div class="refcard"><h3>Periodic deadlines (calendar days after period end)</h3><div class="note">Venture = typical TSXV or CSE issuer under NI 51-102. Senior = CSE NV-tier issuer (non-venture deadlines by CSE policy).</div><div class="tscroll"><table class="ref"><tr><th>Filing</th><th>Venture</th><th>Senior / NV</th></tr>'+
+    refRow('Annual FS + MD&amp;A + certifications','120 days','90 days')+
+    refRow('Interim FS + MD&amp;A + certifications (Q1–Q3)','60 days','45 days')+
+    refRow('Annual Information Form','Not required','90 days')+
+    refRow('Executive compensation disclosure','180 days','140 days')+
+    refRow('CSE Form 7 + Form 6 (monthly)','Before open, 5th trading day of each month','Same')+
+    '</table></div></div>';
+  h += '<div class="refcard"><h3>Event-driven deadlines</h3><div class="note">These are triggered by transactions or events — add them as one-off items when they occur.</div><div class="tscroll"><table class="ref"><tr><th>Trigger</th><th>Obligation</th><th>Deadline</th></tr>'+
+    refRow3('Material change','News release + Material Change Report (51-102F3)','NR forthwith; MCR within 10 days')+
+    refRow3('Private placement closing','Report of Exempt Distribution (45-106F1)','10 days after distribution')+
+    refRow3('Insider trade','SEDI insider report','5 days (initial report: 10 days)')+
+    refRow3('Crossing 10% ownership','Early warning news release + report','NR promptly; report within 2 business days')+
+    refRow3('Significant acquisition (venture: ≥100%)','Business Acquisition Report (51-102F4)','75 days after closing')+
+    refRow3('TSXV private placement','Form 4B notice to TSXV (V-File)','Within 30 days of price reservation')+
+    refRow3('CSE placement / share-based acquisition','Form 9 public notice','At least 5 days before closing')+
+    refRow3('First disclosure of mineral resources','NI 43-101 technical report','45 days after triggering disclosure')+
+    refRow3('Anticipated late filing','MCTO application (NP 12-203)','Apply ~2 weeks before the due date')+
+    '</table></div></div>';
+  h += '<div class="refcard"><h3>Notes</h3><div class="note" style="margin:0">Form 7 dates here skip weekends but not statutory holidays — a holiday only pushes the true deadline later, so the shown date is safe. AGM rows are planning targets (CBCA: within 6 months of year-end and 15 months of the last AGM); confirm against each company\'s statute. This tracker is a working aid, not legal advice.</div></div>';
+  return h + '</div>';
+}
+function refRow(a,b,c){ return '<tr><td>'+a+'</td><td class="mono">'+b+'</td><td class="mono">'+c+'</td></tr>'; }
+function refRow3(a,b,c){ return '<tr><td>'+a+'</td><td>'+b+'</td><td>'+c+'</td></tr>'; }
+
+/* ---------- modals ---------- */
+function renderModal(){
+  if (!ui.modal) return '';
+  var m = ui.modal, h = '<div class="modalbg" data-action="close-bg"><div class="modal" role="dialog" aria-modal="true">';
+  if (m === 'company') {
+    var c = ui.edit || {name:'',ticker:'',exchange:'TSXV',nv:false,yeMonth:12,yeDay:31,assignee:'',since:iso(todayD())};
+    h += '<h2>'+(ui.edit?'Edit company':'Add company')+'</h2>';
+    h += '<div class="fld"><label>Company name</label><input id="m-name" type="text" value="'+esc(c.name)+'" placeholder="Acme Resources Corp."></div>';
+    h += '<div class="grid2"><div class="fld"><label>Ticker</label><input id="m-ticker" type="text" value="'+esc(c.ticker)+'" placeholder="ACME"></div>';
+    h += '<div class="fld"><label>Exchange</label><select id="m-ex"><option value="TSXV"'+(c.exchange==='TSXV'?' selected':'')+'>TSXV</option><option value="CSE"'+(c.exchange==='CSE'?' selected':'')+'>CSE</option></select></div></div>';
+    h += '<div class="fld"><label class="chk" style="flex-direction:row;display:flex;gap:.4rem;align-items:center"><input id="m-nv" type="checkbox"'+(c.nv?' checked':'')+' style="width:auto"> CSE NV (non-venture) tier — senior deadlines apply</label></div>';
+    h += '<div class="grid2"><div class="fld"><label>Year-end month</label><select id="m-yem">';
+    for (var i=1;i<=12;i++) h += '<option value="'+i+'"'+(c.yeMonth===i?' selected':'')+'>'+MN[i-1]+'</option>';
+    h += '</select></div><div class="fld"><label>Year-end day</label><input id="m-yed" type="number" min="1" max="31" value="'+c.yeDay+'"></div></div>';
+    h += '<div class="fld"><label>Track filings due from</label><input id="m-since" type="date" value="'+esc(c.since||'')+'"><div class="hint">Deadlines before this date are hidden — set it earlier to pull in past filings you still owe.</div></div>';
+    h += '<div class="fld"><label>Default assignee</label><select id="m-who">'+personOpts(c.assignee)+'</select><div class="hint">Add team members under Team &amp; settings.</div></div>';
+    h += '<div class="foot"><button class="btn" data-action="close">Cancel</button><button class="btn primary" data-action="save-company">'+(ui.edit?'Save changes':'Add company')+'</button></div>';
+  } else if (m === 'custom') {
+    h += '<h2>Add one-off item</h2>';
+    h += '<div class="fld"><label>What needs filing?</label><input id="m-title" type="text" placeholder="45-106F1 for June placement / MCR – CEO change / BAR …"></div>';
+    h += '<div class="grid2"><div class="fld"><label>Company</label><select id="m-co"><option value="">—</option>';
+    state.companies.forEach(function(c){ h += '<option value="'+c.id+'">'+esc(c.name)+'</option>'; });
+    h += '</select></div><div class="fld"><label>Due date</label><input id="m-due" type="date" value="'+iso(addDays(todayD(),10))+'"></div></div>';
+    h += '<div class="foot"><button class="btn" data-action="close">Cancel</button><button class="btn primary" data-action="save-custom">Add item</button></div>';
+  } else if (m === 'settings') {
+    h += '<h2>Team &amp; settings</h2>';
+    h += '<div class="fld"><label>Team members</label><div class="people">';
+    state.people.forEach(function(p,i){ h += '<div class="p"><span>'+esc(p)+'</span><button class="btn small" data-action="del-person" data-k="'+i+'">Remove</button></div>'; });
+    h += '</div></div>';
+    h += '<div class="fld"><label>Add person</label><div style="display:flex;gap:.5rem"><input id="m-person" type="text" placeholder="Name" style="flex:1"><button class="btn" data-action="add-person">Add</button></div></div>';
+    h += '<div class="fld"><label>“Due soon” window (days)</label><input id="m-soon" type="number" min="3" max="60" value="'+state.settings.dueSoonDays+'"></div>';
+    h += '<div class="foot"><button class="btn" data-action="close">Close</button><button class="btn primary" data-action="save-settings">Save</button></div>';
+  } else if (m === 'whoami') {
+    h += '<h2>Who are you?</h2><p style="font-size:.86rem;color:var(--ink2);margin-bottom:.9rem">Check-offs and filings you mark are recorded under this name so the team can see who did what. It is remembered on this device.</p>';
+    if (state.people.length) {
+      h += '<div class="whobtns">';
+      state.people.forEach(function(p){ h += '<button class="btn'+(p===me?' primary':'')+'" data-action="pick-me" data-k="'+esc(p)+'">'+esc(p)+'</button>'; });
+      h += '</div>';
+    }
+    h += '<div class="fld"><label>'+(state.people.length?'Or add yourself':'Your name')+'</label><div style="display:flex;gap:.5rem"><input id="m-me" type="text" placeholder="Name" style="flex:1"><button class="btn primary" data-action="save-me">That\'s me</button></div></div>';
+    h += '<div class="foot"><button class="btn" data-action="close">Cancel</button></div>';
+  } else if (m === 'del-company') {
+    var dc = coById(ui.edit);
+    h += '<h2>Remove '+esc(dc?dc.name:'company')+'?</h2><p style="font-size:.88rem;color:var(--ink2)">This deletes the company, its generated calendar and its filing history from the dashboard. It cannot be undone.</p>';
+    h += '<div class="foot"><button class="btn" data-action="close">Cancel</button><button class="btn danger" data-action="del-company">Remove company</button></div>';
+  }
+  return h + '</div></div>';
+}
+
+/* ---------- mutations & persistence ---------- */
+function mutate(fn){
+  if (readOnly) { toast('Read-only view — this change was not saved.'); return; }
+  if (!me && ui.modal !== 'whoami') {
+    ui.modal = 'whoami'; render();
+    toast('First, tell the dashboard who you are — then redo that change.');
+    return;
+  }
+  fn();
+  render();
+  scheduleSave();
+}
+function setMe(name){
+  name = (name || '').trim();
+  if (!name) return;
+  me = name;
+  try { localStorage.setItem('fd-me', me); } catch(e){}
+  if (state.people.indexOf(me) === -1) mutate(function(){ state.people.push(me); ui.modal = null; });
+  else { ui.modal = null; render(); }
+}
+function ensureRec(key){ if (!state.records[key]) state.records[key] = {}; return state.records[key]; }
+
+function scheduleSave(){
+  pendingSave = true; saveState = 'pending'; paintSaveChip();
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(function(){ doSave(false); }, 1200);
+}
+function api(path, opts){
+  opts = opts || {};
+  opts.headers = Object.assign({'Content-Type':'application/json'}, opts.headers || {});
+  opts.credentials = 'same-origin';
+  return fetch(path, opts);
+}
+function paintSaveChip(){
+  var el = document.querySelector('.savechip');
+  if (el) { el.dataset.s = saveState; el.textContent = readOnly?'Read-only': saveState==='pending'?'Saving…': saveState==='error'?'Save failed': saveState==='saved'?'Saved':'Up to date'; }
+}
+function doSave(retried){
+  api('/api/state', {method:'PUT', body: JSON.stringify({version: VERSION, state: state})}).then(function(r){
+    if (r.status === 401) { renderLogin(''); return; }
+    if (r.status === 409) {
+      return r.json().then(function(doc){
+        VERSION = doc.version; state = normalize(doc.state);
+        pendingSave = false; saveState = 'idle'; render();
+        toast('Someone else saved at the same moment - showing their version. Please re-apply your last change.');
+      });
+    }
+    if (r.status === 503) { saveState = 'error'; paintSaveChip(); toast('Storage is not configured yet - attach the Upstash Redis store in Vercel.'); return; }
+    if (!r.ok) throw new Error('save_failed');
+    return r.json().then(function(j){ VERSION = j.version; pendingSave = false; saveState = 'saved'; paintSaveChip(); });
+  }).catch(function(){
+    if (!retried) saveTimer = setTimeout(function(){ doSave(true); }, 1500 + Math.random()*1500);
+    else { saveState = 'error'; paintSaveChip(); toast('Could not save - check your connection. Your changes are still on screen; the next edit retries.'); }
+  });
+}
+function toast(msg){
+  var box = document.getElementById('toast');
+  var el = document.createElement('div');
+  el.className = 'tmsg'; el.textContent = msg;
+  box.appendChild(el);
+  setTimeout(function(){ el.remove(); }, 5200);
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click', function(e){
+  var t = e.target.closest('[data-action]');
+  if (!t) return;
+  var a = t.dataset.action, k = t.dataset.k;
+  if (a === 'tab') { ui.tab = t.dataset.v; render(); }
+  else if (a === 'expand') { ui.open[k] = !ui.open[k]; render(); }
+  else if (a === 'toggle-done') mutate(function(){
+    var r = ensureRec(k);
+    r.done = !r.done;
+    if (r.done) {
+      if (!r.filedOn) r.filedOn = iso(todayD());
+      r.doneStamp = stampNow();
+    } else { delete r.filedOn; delete r.doneStamp; }
+  });
+  else if (a === 'open-company') { ui.modal='company'; ui.edit=null; render(); }
+  else if (a === 'edit-company') { ui.modal='company'; ui.edit=coById(k); render(); }
+  else if (a === 'save-company') saveCompanyFromForm();
+  else if (a === 'ask-del-company') { ui.modal='del-company'; ui.edit=k; render(); }
+  else if (a === 'del-company') mutate(function(){
+    var id = ui.edit;
+    state.companies = state.companies.filter(function(c){ return c.id !== id; });
+    Object.keys(state.records).forEach(function(rk){ if (rk.indexOf(id+':')===0) delete state.records[rk]; });
+    state.custom = state.custom.filter(function(x){ return x.companyId !== id; });
+    ui.modal=null; ui.edit=null;
+  });
+  else if (a === 'open-custom') { ui.modal='custom'; render(); }
+  else if (a === 'save-custom') saveCustomFromForm();
+  else if (a === 'del-custom') mutate(function(){
+    state.custom = state.custom.filter(function(x){ return String(x.id) !== String(k); });
+    delete state.records['custom:'+k];
+  });
+  else if (a === 'open-whoami') { ui.modal='whoami'; render(); }
+  else if (a === 'pick-me') setMe(k);
+  else if (a === 'save-me') setMe(document.getElementById('m-me').value);
+  else if (a === 'open-settings') { ui.modal='settings'; render(); }
+  else if (a === 'add-person') {
+    var inp = document.getElementById('m-person');
+    var name = (inp.value||'').trim();
+    if (name && state.people.indexOf(name) === -1) mutate(function(){ state.people.push(name); });
+  }
+  else if (a === 'del-person') mutate(function(){ state.people.splice(+k,1); });
+  else if (a === 'save-settings') {
+    var v = +document.getElementById('m-soon').value;
+    mutate(function(){ if (v>=3 && v<=60) state.settings.dueSoonDays = v; ui.modal=null; });
+  }
+  else if (a === 'close') { ui.modal=null; ui.edit=null; render(); }
+  else if (a === 'close-bg') { if (e.target === t) { ui.modal=null; ui.edit=null; render(); } }
+});
+document.addEventListener('change', function(e){
+  var t = e.target.closest('[data-action]');
+  if (!t) return;
+  var a = t.dataset.action, k = t.dataset.k, v = t.value;
+  if (a === 'f-co') { ui.fCo = v; render(); }
+  else if (a === 'f-who') { ui.fWho = v; render(); }
+  else if (a === 'f-st') { ui.fSt = v; render(); }
+  else if (a === 'f-done') { ui.showDone = t.checked; render(); }
+  else if (a === 'step') mutate(function(){ var r = ensureRec(k); r.checks = r.checks || {}; if (t.checked) r.checks[t.dataset.i] = stampNow(); else delete r.checks[t.dataset.i]; });
+  else if (a === 'assign') mutate(function(){ ensureRec(k).assignee = v; });
+  else if (a === 'filedon') mutate(function(){ var r = ensureRec(k); if (v) r.filedOn = v; else delete r.filedOn; });
+  else if (a === 'note') mutate(function(){ var r = ensureRec(k); if (v) r.note = v; else delete r.note; });
+});
+function saveCompanyFromForm(){
+  var name = (document.getElementById('m-name').value||'').trim();
+  if (!name) { toast('Company name is required.'); return; }
+  var yeD = Math.min(31, Math.max(1, +document.getElementById('m-yed').value || 31));
+  var data = {
+    name: name,
+    ticker: (document.getElementById('m-ticker').value||'').trim().toUpperCase(),
+    exchange: document.getElementById('m-ex').value,
+    nv: document.getElementById('m-nv').checked,
+    yeMonth: +document.getElementById('m-yem').value,
+    yeDay: yeD,
+    since: document.getElementById('m-since').value || '',
+    assignee: document.getElementById('m-who').value
+  };
+  if (data.exchange !== 'CSE') data.nv = false;
+  mutate(function(){
+    if (ui.edit) { for (var kk in data) ui.edit[kk] = data[kk]; }
+    else { data.id = 'c' + Date.now().toString(36); state.companies.push(data); }
+    ui.modal = null; ui.edit = null;
+  });
+}
+function saveCustomFromForm(){
+  var title = (document.getElementById('m-title').value||'').trim();
+  var due = document.getElementById('m-due').value;
+  if (!title || !due) { toast('A title and a due date are required.'); return; }
+  var co = document.getElementById('m-co').value;
+  mutate(function(){
+    state.custom.push({id: Date.now().toString(36), title: title, due: due, companyId: co});
+    ui.modal = null;
+  });
+}
+window.addEventListener('beforeunload', function(e){
+  if (pendingSave && !readOnly) { e.preventDefault(); e.returnValue = ''; }
+});
+
+/* ---------- boot: login, load, poll ---------- */
+function renderLogin(msg){
+  document.getElementById('app').innerHTML =
+    '<div class="wrap" style="max-width:420px;padding-top:14vh">'+
+    '<h1 style="font-family:\'Spectral\',Georgia,serif;font-weight:600;font-size:1.7rem;margin-bottom:.2rem">Filing Desk</h1>'+
+    '<div style="color:var(--ink2);font-size:.9rem;margin-bottom:1.2rem">Continuous disclosure tracker - TSXV &amp; CSE issuers</div>'+
+    '<div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:1.2rem 1.3rem">'+
+    '<label style="font-size:.8rem;font-weight:600;color:var(--ink2);display:block;margin-bottom:.3rem">Access code</label>'+
+    '<form id="loginform" style="display:flex;gap:.5rem"><input id="pw" type="password" autocomplete="current-password" style="flex:1"><button class="btn primary" type="submit">Enter</button></form>'+
+    (msg?'<div style="color:var(--danger);font-size:.82rem;margin-top:.6rem">'+esc(msg)+'</div>':'')+
+    '</div></div>';
+  var f = document.getElementById('loginform');
+  f.addEventListener('submit', function(e){
+    e.preventDefault();
+    api('/api/login', {method:'POST', body: JSON.stringify({password: document.getElementById('pw').value})}).then(function(r){
+      if (r.ok) boot();
+      else if (r.status === 401) renderLogin('Wrong access code - try again.');
+      else renderLogin('Login failed - is APP_PASSWORD set in Vercel?');
+    }).catch(function(){ renderLogin('Network error - try again.'); });
+  });
+  document.getElementById('pw').focus();
+}
+function renderLoading(note){
+  document.getElementById('app').innerHTML = '<div class="wrap" style="text-align:center;padding-top:18vh;color:var(--ink2)">'+esc(note||'Loading...')+'</div>';
+}
+function boot(){
+  renderLoading();
+  api('/api/state').then(function(r){
+    if (r.status === 401) { renderLogin(''); return; }
+    if (r.status === 503) { renderLoading('Storage is not configured yet - in Vercel, attach an Upstash Redis store to this project, then reload.'); return; }
+    if (!r.ok) throw new Error('load_failed');
+    return r.json().then(function(doc){
+      VERSION = doc.version; state = normalize(doc.state);
+      render();
+      if (!me && !ui.modal) { ui.modal = 'whoami'; render(); }
+      startPoll();
+    });
+  }).catch(function(){ renderLoading('Could not reach the server - check your connection and reload.'); });
+}
+var pollTimer = null;
+function startPoll(){
+  if (pollTimer) return;
+  pollTimer = setInterval(function(){
+    if (pendingSave || document.hidden || ui.modal) return;
+    api('/api/state').then(function(r){ if (r.ok) return r.json(); }).then(function(doc){
+      if (doc && doc.version > VERSION && !pendingSave) { VERSION = doc.version; state = normalize(doc.state); render(); }
+    }).catch(function(){});
+  }, 45000);
+}
+boot();
+})();
+</script>
+</body>
+</html>
