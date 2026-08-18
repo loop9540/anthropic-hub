@@ -98,7 +98,8 @@ input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid 
 .row{background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--gc,var(--line2));border-radius:6px;box-shadow:var(--shadow)}
 .row:hover{border-color:var(--line2);border-left-color:var(--gc,var(--line2))}
 .row[data-st="done"]{opacity:.72}
-.rhead{display:flex;align-items:center;gap:.65rem;padding:.5rem .8rem;flex-wrap:wrap}
+.rhead{display:flex;align-items:center;gap:.65rem;padding:.5rem .8rem;flex-wrap:wrap;cursor:pointer}
+.rhead:hover .rtitle{color:var(--accent)}
 .ck{width:1.3rem;height:1.3rem;border:2px solid var(--line2);border-radius:50%;flex:none;display:inline-flex;align-items:center;justify-content:center;font-size:.75rem;color:transparent}
 .ck:hover{border-color:var(--p-green);color:var(--p-green)}
 .row[data-st="done"] .ck{background:var(--p-green);border-color:var(--p-green);color:#fff}
@@ -455,10 +456,10 @@ function renderRow(it){
   var who = r.assignee || (c && c.assignee) || '';
   var late = r.done && r.filedOn && fromIso(r.filedOn) > it.due;
   var h = '<article class="row" data-st="'+st+'">';
-  h += '<div class="rhead">';
+  h += '<div class="rhead" data-action="expand" data-k="'+esc(it.key)+'" title="'+(open?'Click to collapse':'Click to expand')+'">';
   h += '<button class="ck" data-action="toggle-done" data-k="'+esc(it.key)+'" title="'+(r.done?'Mark not filed':'Mark filed')+'" aria-label="'+(r.done?'Mark not filed':'Mark filed')+'">✓</button>';
   h += '<div class="rtitle">'+(c?'<span class="tick">'+esc(coLabel(c))+'</span> ':'')+esc(it.title)+(it.period?' <span class="co">· '+esc(it.period)+'</span>':'')+'</div>';
-  h += '<div class="chips">'+(c?exChip(c):'')+
+  h += '<div class="chips">'+
        '<span class="chip">'+esc(it.cat)+'</span>'+
        (who?'<span class="chip who">'+avatar(who)+esc(who)+'</span>':'')+
        (late?'<span class="chip" style="background:var(--warn-bg);color:var(--warn)">Filed late</span>':'')+'</div>';
