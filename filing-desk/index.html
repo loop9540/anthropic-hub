@@ -104,6 +104,8 @@ input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid 
 .row[data-st="done"] .ck{background:var(--p-green);border-color:var(--p-green);color:#fff}
 .rtitle{font-weight:600;font-size:.9rem;flex:1 1 14rem;min-width:0}
 .rtitle .co{color:var(--ink2);font-weight:500}
+.rtitle .tick{color:var(--accent);font-weight:800;letter-spacing:.02em}
+.rtitle .tick::after{content:' ·';color:var(--ink3);font-weight:500}
 .chips{display:flex;gap:.3rem;flex-wrap:wrap;align-items:center}
 .chip{font-size:.7rem;font-weight:600;letter-spacing:.02em;padding:.12rem .5rem;border-radius:99px;background:var(--chip);color:var(--ink2);white-space:nowrap;display:inline-flex;align-items:center;gap:.3rem}
 .chip.ex{background:var(--accent-soft);color:var(--accent)}
@@ -455,8 +457,8 @@ function renderRow(it){
   var h = '<article class="row" data-st="'+st+'">';
   h += '<div class="rhead">';
   h += '<button class="ck" data-action="toggle-done" data-k="'+esc(it.key)+'" title="'+(r.done?'Mark not filed':'Mark filed')+'" aria-label="'+(r.done?'Mark not filed':'Mark filed')+'">✓</button>';
-  h += '<div class="rtitle">'+esc(it.title)+(it.period?' <span class="co">· '+esc(it.period)+'</span>':'')+'</div>';
-  h += '<div class="chips">'+(c?'<span class="chip">'+esc(coLabel(c))+'</span>'+exChip(c):'')+
+  h += '<div class="rtitle">'+(c?'<span class="tick">'+esc(coLabel(c))+'</span> ':'')+esc(it.title)+(it.period?' <span class="co">· '+esc(it.period)+'</span>':'')+'</div>';
+  h += '<div class="chips">'+(c?exChip(c):'')+
        '<span class="chip">'+esc(it.cat)+'</span>'+
        (who?'<span class="chip who">'+avatar(who)+esc(who)+'</span>':'')+
        (late?'<span class="chip" style="background:var(--warn-bg);color:var(--warn)">Filed late</span>':'')+'</div>';
