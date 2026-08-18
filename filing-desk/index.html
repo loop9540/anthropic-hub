@@ -220,9 +220,8 @@ try { var s = sessionStorage.getItem('fd-ui'); if (s) { var p = JSON.parse(s); f
 var readOnly = false;
 var saveTimer = null, saveState = 'idle', pendingSave = false;
 
-var me = '';
-try { me = localStorage.getItem('fd-me') || ''; } catch(e){}
-function stampNow(){ return {by: me, at: new Date().toISOString()}; }
+var me = '', myEmail = '';
+function stampNow(){ return {by: me, email: myEmail, at: new Date().toISOString()}; }
 function fmtStamp(v){
   if (!v || typeof v !== 'object' || !v.by) return '';
   var d = v.at ? new Date(v.at) : null;
@@ -372,7 +371,7 @@ function render(){
   h += '<div class="actions"><span class="savechip" data-s="'+saveState+'">'+
        (readOnly ? 'Read-only' : saveState==='pending' ? 'Saving…' : saveState==='error' ? 'Save failed' : saveState==='saved' ? 'Saved' : 'Up to date')+'</span>';
   if (!readOnly) {
-    h += '<button class="mechip" data-action="open-whoami" title="Actions you take are recorded under this name">'+(me ? avatar(me)+'<span>'+esc(me)+'</span>' : '<span style="padding-left:.4rem">Set your name</span>')+'</button>';
+    h += '<span class="mechip" title="Signed in with Google as '+esc(myEmail)+'">'+avatar(me)+'<span>'+esc(me)+'</span></span>';
     h += '<button class="btn" data-action="open-custom">Add one-off item</button>';
     h += '<button class="btn primary" data-action="open-company">Add company</button>';
   }
@@ -570,16 +569,7 @@ function renderModal(){
     h += '</div></div>';
     h += '<div class="fld"><label>Add person</label><div style="display:flex;gap:.5rem"><input id="m-person" type="text" placeholder="Name" style="flex:1"><button class="btn" data-action="add-person">Add</button></div></div>';
     h += '<div class="fld"><label>“Due soon” window (days)</label><input id="m-soon" type="number" min="3" max="60" value="'+state.settings.dueSoonDays+'"></div>';
-    h += '<div class="foot"><button class="btn" data-action="close">Close</button><button class="btn primary" data-action="save-settings">Save</button></div>';
-  } else if (m === 'whoami') {
-    h += '<h2>Who are you?</h2><p style="font-size:.86rem;color:var(--ink2);margin-bottom:.9rem">Check-offs and filings you mark are recorded under this name so the team can see who did what. It is remembered on this device.</p>';
-    if (state.people.length) {
-      h += '<div class="whobtns">';
-      state.people.forEach(function(p){ h += '<button class="btn'+(p===me?' primary':'')+'" data-action="pick-me" data-k="'+esc(p)+'">'+esc(p)+'</button>'; });
-      h += '</div>';
-    }
-    h += '<div class="fld"><label>'+(state.people.length?'Or add yourself':'Your name')+'</label><div style="display:flex;gap:.5rem"><input id="m-me" type="text" placeholder="Name" style="flex:1"><button class="btn primary" data-action="save-me">That\'s me</button></div></div>';
-    h += '<div class="foot"><button class="btn" data-action="close">Cancel</button></div>';
+    h += '<div class="foot"><a class="btn" href="/api/logout" style="margin-right:auto;text-decoration:none">Sign out</a><button class="btn" data-action="close">Close</button><button class="btn primary" data-action="save-settings">Save</button></div>';
   } else if (m === 'del-company') {
     var dc = coById(ui.edit);
     h += '<h2>Remove '+esc(dc?dc.name:'company')+'?</h2><p style="font-size:.88rem;color:var(--ink2)">This deletes the company, its generated calendar and its filing history from the dashboard. It cannot be undone.</p>';
@@ -591,22 +581,10 @@ function renderModal(){
 /* ---------- mutations & persistence ---------- */
 function mutate(fn){
   if (readOnly) { toast('Read-only view — this change was not saved.'); return; }
-  if (!me && ui.modal !== 'whoami') {
-    ui.modal = 'whoami'; render();
-    toast('First, tell the dashboard who you are — then redo that change.');
-    return;
-  }
+  if (me && state.people.indexOf(me) === -1) state.people.push(me);
   fn();
   render();
   scheduleSave();
-}
-function setMe(name){
-  name = (name || '').trim();
-  if (!name) return;
-  me = name;
-  try { localStorage.setItem('fd-me', me); } catch(e){}
-  if (state.people.indexOf(me) === -1) mutate(function(){ state.people.push(me); ui.modal = null; });
-  else { ui.modal = null; render(); }
 }
 function ensureRec(key){ if (!state.records[key]) state.records[key] = {}; return state.records[key]; }
 
@@ -627,7 +605,7 @@ function paintSaveChip(){
 }
 function doSave(retried){
   api('/api/state', {method:'PUT', body: JSON.stringify({version: VERSION, state: state})}).then(function(r){
-    if (r.status === 401) { renderLogin(''); return; }
+    if (r.status === 401) { renderLogin(loginErr()); return; }
     if (r.status === 409) {
       return r.json().then(function(doc){
         VERSION = doc.version; state = normalize(doc.state);
@@ -683,9 +661,6 @@ document.addEventListener('click', function(e){
     state.custom = state.custom.filter(function(x){ return String(x.id) !== String(k); });
     delete state.records['custom:'+k];
   });
-  else if (a === 'open-whoami') { ui.modal='whoami'; render(); }
-  else if (a === 'pick-me') setMe(k);
-  else if (a === 'save-me') setMe(document.getElementById('m-me').value);
   else if (a === 'open-settings') { ui.modal='settings'; render(); }
   else if (a === 'add-person') {
     var inp = document.getElementById('m-person');
@@ -750,25 +725,25 @@ window.addEventListener('beforeunload', function(e){
 
 /* ---------- boot: login, load, poll ---------- */
 function renderLogin(msg){
+  var glogo = '<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.7 1.22 9.19 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
   document.getElementById('app').innerHTML =
     '<div class="wrap" style="max-width:420px;padding-top:14vh">'+
     '<h1 style="font-weight:800;font-size:1.7rem;margin-bottom:.2rem">Filing Desk</h1>'+
     '<div style="color:var(--ink2);font-size:.9rem;margin-bottom:1.2rem">Continuous disclosure tracker - TSXV &amp; CSE issuers</div>'+
-    '<div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:1.2rem 1.3rem">'+
-    '<label style="font-size:.8rem;font-weight:600;color:var(--ink2);display:block;margin-bottom:.3rem">Access code</label>'+
-    '<form id="loginform" style="display:flex;gap:.5rem"><input id="pw" type="password" autocomplete="current-password" style="flex:1"><button class="btn primary" type="submit">Enter</button></form>'+
-    (msg?'<div style="color:var(--danger);font-size:.82rem;margin-top:.6rem">'+esc(msg)+'</div>':'')+
+    '<div style="background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);padding:1.3rem">'+
+    '<a class="btn" href="/api/auth" style="width:100%;justify-content:center;padding:.6rem;font-size:.92rem;font-weight:600;text-decoration:none;gap:.6rem">'+glogo+'Continue with Google</a>'+
+    '<div style="color:var(--ink3);font-size:.76rem;margin-top:.7rem;text-align:center">Access is limited to approved team accounts.</div>'+
+    (msg?'<div style="color:var(--danger);font-size:.82rem;margin-top:.7rem">'+esc(msg)+'</div>':'')+
     '</div></div>';
-  var f = document.getElementById('loginform');
-  f.addEventListener('submit', function(e){
-    e.preventDefault();
-    api('/api/login', {method:'POST', body: JSON.stringify({password: document.getElementById('pw').value})}).then(function(r){
-      if (r.ok) boot();
-      else if (r.status === 401) renderLogin('Wrong access code - try again.');
-      else renderLogin('Login failed - is APP_PASSWORD set in Vercel?');
-    }).catch(function(){ renderLogin('Network error - try again.'); });
-  });
-  document.getElementById('pw').focus();
+}
+function loginErr(){
+  var q = new URLSearchParams(location.search);
+  var e = q.get('err');
+  if (e) { try { history.replaceState(null, '', location.pathname); } catch(x){} }
+  if (e === 'denied') return 'This Google account is not authorized for this dashboard. Ask the owner to add your email to ALLOWED_EMAILS in Vercel.';
+  if (e === 'config') return 'Sign-in is not fully configured on the server yet.';
+  if (e) return 'Sign-in failed - please try again.';
+  return '';
 }
 function renderLoading(note){
   document.getElementById('app').innerHTML = '<div class="wrap" style="text-align:center;padding-top:18vh;color:var(--ink2)">'+esc(note||'Loading...')+'</div>';
@@ -776,13 +751,19 @@ function renderLoading(note){
 function boot(){
   renderLoading();
   api('/api/state').then(function(r){
-    if (r.status === 401) { renderLogin(''); return; }
-    if (r.status === 503) { renderLoading('Storage is not configured yet - in Vercel, attach an Upstash Redis store to this project, then reload.'); return; }
+    if (r.status === 401) { renderLogin(loginErr()); return; }
+    if (r.status === 503) {
+      return r.json().then(function(j){
+        renderLoading(j && j.error === 'auth_not_configured'
+          ? 'Sign-in is not configured yet - set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SESSION_SECRET and ALLOWED_EMAILS in Vercel, then reload.'
+          : 'Storage is not configured yet - in Vercel, attach an Upstash Redis store to this project, then reload.');
+      });
+    }
     if (!r.ok) throw new Error('load_failed');
     return r.json().then(function(doc){
       VERSION = doc.version; state = normalize(doc.state);
+      if (doc.user) { myEmail = doc.user.email || ''; me = doc.user.name || myEmail; }
       render();
-      if (!me && !ui.modal) { ui.modal = 'whoami'; render(); }
       startPoll();
     });
   }).catch(function(){ renderLoading('Could not reach the server - check your connection and reload.'); });

@@ -1,4 +1,4 @@
-const crypto = require('crypto');
+const { readSession, authConfigured } = require('../lib/session.js');
 
 const KEY = 'fd:doc';
 const MAX_BYTES = 900000;
@@ -17,17 +17,6 @@ const SEED = {
     settings: { dueSoonDays: 14 }
   }
 };
-
-function sessionToken() {
-  const secret = process.env.SESSION_SECRET || process.env.APP_PASSWORD || '';
-  return crypto.createHmac('sha256', secret).update('fd-session-v1').digest('hex');
-}
-
-function isAuthed(req) {
-  if (!process.env.APP_PASSWORD) return false;
-  const cookies = String(req.headers.cookie || '').split(/;\s*/);
-  return cookies.indexOf('fd_auth=' + sessionToken()) !== -1;
-}
 
 function redisConfig() {
   const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
@@ -48,7 +37,12 @@ async function redis(cmd) {
 }
 
 module.exports = async (req, res) => {
-  if (!isAuthed(req)) {
+  if (!authConfigured()) {
+    res.status(503).json({ error: 'auth_not_configured' });
+    return;
+  }
+  const user = readSession(req);
+  if (!user) {
     res.status(401).json({ error: 'unauthorized' });
     return;
   }
@@ -59,7 +53,8 @@ module.exports = async (req, res) => {
 
   if (req.method === 'GET') {
     const raw = await redis(['GET', KEY]);
-    res.status(200).json(raw ? JSON.parse(raw) : SEED);
+    const doc = raw ? JSON.parse(raw) : SEED;
+    res.status(200).json({ version: doc.version, state: doc.state, user: user });
     return;
   }
 
@@ -72,7 +67,7 @@ module.exports = async (req, res) => {
     const raw = await redis(['GET', KEY]);
     const current = raw ? JSON.parse(raw) : SEED;
     if (current.version !== body.version) {
-      res.status(409).json(current);
+      res.status(409).json({ version: current.version, state: current.state, user: user });
       return;
     }
     const next = { version: current.version + 1, state: body.state };
