@@ -518,6 +518,66 @@
         .empty .btn { margin: 4px; }
 
         /* Toast */
+        /* Gmail import modal */
+        .modal-backdrop {
+            position: absolute; inset: 0; z-index: 60;
+            background: rgba(6, 8, 20, 0.5);
+            backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+            display: grid; place-items: center; padding: 16px;
+        }
+        .modal-backdrop[hidden] { display: none; }
+        .modal {
+            width: min(600px, 100%);
+            max-height: calc(100vh - 32px);
+            overflow: auto;
+            padding: 22px 24px;
+            background: var(--glass-strong);
+            animation: pop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .modal h3 { font-size: 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+        .modal h3 .g { display: inline-flex; align-items: center; gap: 9px; }
+        .modal .close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 20px; line-height: 1; padding: 2px 6px; border-radius: 6px; }
+        .modal .close:hover { color: var(--text); background: var(--input-bg); }
+        .modal p { font-size: 13.5px; color: var(--text-muted); line-height: 1.55; margin-bottom: 12px; }
+        .modal ol { padding-left: 20px; font-size: 13px; color: var(--text-muted); line-height: 1.7; margin-bottom: 14px; }
+        .modal a { color: var(--accent-blue); }
+        .modal code { font-size: 12px; padding: 1px 6px; border-radius: 5px; background: var(--input-bg); border: 1px solid var(--glass-border); color: var(--text); }
+        .modal .field input, .modal select {
+            width: 100%; font: inherit; font-size: 14px; color: var(--text);
+            background: var(--input-bg); border: 1px solid var(--glass-border);
+            border-radius: 10px; padding: 9px 11px; outline: none;
+        }
+        .modal select { width: auto; padding: 7px 10px; cursor: pointer; }
+        .modal select option { color: #1a1a2e; }
+        .modal .field input:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(108,155,255,0.2); }
+        .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; font-size: 13px; }
+        .row label { display: inline-flex; align-items: center; gap: 8px; }
+        .check { display: flex; align-items: center; gap: 9px; font-size: 13px; margin-bottom: 8px; cursor: pointer; }
+        .check input { width: 16px; height: 16px; accent-color: var(--accent-purple); }
+        .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 14px; }
+        .actions .spacer { flex: 1; }
+        .btn.link { background: none; border-color: transparent; color: var(--text-muted); font-weight: 500; }
+        .btn.link:hover { color: var(--text); transform: none; }
+        .btn.google { background: #fff; color: #1f1f1f; border-color: transparent; box-shadow: 0 4px 14px rgba(0,0,0,0.25); }
+        .btn.google:hover { box-shadow: 0 8px 22px rgba(0,0,0,0.3); }
+        .btn.google svg { width: 18px; height: 18px; }
+        .progress { height: 8px; border-radius: 999px; background: var(--input-bg); overflow: hidden; margin: 8px 0 10px; }
+        .progress i { display: block; height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, var(--accent-purple), var(--accent-blue)); transition: width 0.25s ease; }
+        .contact-list { max-height: 300px; overflow: auto; border: 1px solid var(--glass-border); border-radius: 12px; margin-bottom: 12px; }
+        .contact { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 1px solid var(--glass-border); font-size: 13px; cursor: pointer; }
+        .contact:last-child { border-bottom: none; }
+        .contact:hover { background: var(--input-bg); }
+        .contact input { width: 16px; height: 16px; accent-color: var(--accent-purple); flex: 0 0 auto; }
+        .contact .avatar { width: 32px; height: 32px; font-size: 12px; }
+        .contact .who { min-width: 0; flex: 1; }
+        .contact .who b { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .contact .who span { display: block; font-size: 11.5px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .contact .count { font-size: 11px; color: var(--text-muted); white-space: nowrap; text-align: right; }
+        .contact .count b { display: block; color: var(--text); font-size: 13px; }
+        .contact.on-map { opacity: 0.55; }
+        .pill { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px; background: rgba(78,204,163,0.15); color: var(--accent-green); }
+        .error { font-size: 13px; color: var(--accent-red); background: rgba(255,107,107,0.1); border: 1px solid rgba(255,107,107,0.3); padding: 10px 12px; border-radius: 10px; margin-bottom: 12px; line-height: 1.5; }
+
         .toast {
             position: absolute;
             left: 50%; bottom: 24px;
@@ -569,7 +629,15 @@
             <h2>Your map is empty</h2>
             <p>Add people, drag them around, and pull the <b>+</b> handle from one person to another to connect them.</p>
             <button class="btn primary" id="emptyAdd">Add your first person</button>
+            <button class="btn" id="emptyGmail">Import from Gmail</button>
             <button class="btn" id="emptySeed">Load sample map</button>
+        </div>
+    </div>
+
+    <div class="modal-backdrop" id="gmailModal" hidden>
+        <div class="modal glass" role="dialog" aria-labelledby="gmailTitle">
+            <h3><span class="g" id="gmailTitle"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9 6 9-6"/><rect x="3" y="5" width="18" height="14" rx="2"/></svg>Import people from Gmail</span><button class="close" id="gmailClose" title="Close">×</button></h3>
+            <div id="gmailBody"></div>
         </div>
     </div>
 
@@ -596,6 +664,9 @@
             <svg viewBox="0 0 24 24"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M4 17v3h16v-3"/></svg><span class="label">Import</span>
         </button>
         <input type="file" id="fileInput" accept="application/json,.json" hidden>
+        <button class="btn" id="gmailBtn" title="Add the people you email from Gmail">
+            <svg viewBox="0 0 24 24"><path d="M3 7l9 6 9-6"/><rect x="3" y="5" width="18" height="14" rx="2"/></svg><span class="label">Gmail</span>
+        </button>
         <button class="btn danger" id="clearBtn" title="Remove everyone">
             <svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg><span class="label">Clear</span>
         </button>
@@ -694,7 +765,7 @@
     function sanitize(s) {
         const nodes = (s.nodes || []).filter(n => n && n.id).map(n => ({
             id: String(n.id), name: String(n.name || 'Unnamed'), role: String(n.role || ''),
-            color: COLORS.includes(n.color) ? n.color : COLORS[0], x: +n.x || 0, y: +n.y || 0
+            email: String(n.email || ''), color: COLORS.includes(n.color) ? n.color : COLORS[0], x: +n.x || 0, y: +n.y || 0
         }));
         const ids = new Set(nodes.map(n => n.id));
         const seen = new Set();
@@ -803,7 +874,7 @@
         el.style.setProperty('--node-color', n.color);
         el.style.transform = `translate(${n.x}px, ${n.y}px)`;
         el.innerHTML = `<div class="avatar">${escapeHtml(initials(n.name))}</div>
-            <div class="meta"><div class="name">${escapeHtml(n.name)}</div><div class="role">${escapeHtml(n.role)}</div></div>
+            <div class="meta"><div class="name">${escapeHtml(n.name)}</div><div class="role">${escapeHtml(n.role || n.email || '')}</div></div>
             <div class="port" title="Drag to connect"></div>`;
         nodeEls.set(n.id, el);
         return el;
@@ -814,7 +885,7 @@
         el.style.setProperty('--node-color', n.color);
         el.querySelector('.avatar').textContent = initials(n.name);
         el.querySelector('.name').textContent = n.name;
-        el.querySelector('.role').textContent = n.role;
+        el.querySelector('.role').textContent = n.role || n.email || '';
         el.style.transform = `translate(${n.x}px, ${n.y}px)`;
         updateEdgesFor(id);
     }
@@ -905,6 +976,7 @@
                 <h3>Person <button class="close" id="panelClose" title="Close">×</button></h3>
                 <div class="field"><label>Name</label><input id="fName" value="${escapeHtml(n.name)}" placeholder="Full name" autocomplete="off"></div>
                 <div class="field"><label>Role / note</label><input id="fRole" value="${escapeHtml(n.role)}" placeholder="e.g. Designer, mentor, friend" autocomplete="off"></div>
+                <div class="field"><label>Email</label><input id="fEmail" value="${escapeHtml(n.email || '')}" placeholder="name@example.com" autocomplete="off"></div>
                 <div class="field"><label>Color</label><div class="swatches">${COLORS.map(c => `<div class="swatch ${c === n.color ? 'on' : ''}" data-color="${c}" style="background:${c}"></div>`).join('')}</div></div>
                 <div class="field"><label>Connections (${links.length ? state.edges.filter(e => e.from === n.id || e.to === n.id).length : 0})</label>
                     <div class="connections">${links || '<span class="hint">No connections yet. Pull the + handle to someone.</span>'}</div></div>
@@ -916,8 +988,9 @@
             $('panelClose').onclick = () => select(null);
             $('fName').oninput = (ev) => { noteEdit(); n.name = ev.target.value; refreshNodeEl(n.id); save(); };
             $('fRole').oninput = (ev) => { noteEdit(); n.role = ev.target.value; refreshNodeEl(n.id); save(); };
-            $('fName').onfocus = $('fRole').onfocus = beginEdit;
-            $('fName').onkeydown = $('fRole').onkeydown = (ev) => { if (ev.key === 'Enter') ev.target.blur(); };
+            $('fEmail').oninput = (ev) => { noteEdit(); n.email = ev.target.value.trim(); refreshNodeEl(n.id); save(); };
+            $('fName').onfocus = $('fRole').onfocus = $('fEmail').onfocus = beginEdit;
+            $('fName').onkeydown = $('fRole').onkeydown = $('fEmail').onkeydown = (ev) => { if (ev.key === 'Enter') ev.target.blur(); };
             panel.querySelectorAll('.swatch').forEach(sw => sw.onclick = () => {
                 pushUndo(); n.color = sw.dataset.color; refreshNodeEl(n.id); renderPanel(); save();
             });
@@ -1025,6 +1098,11 @@
     function autoLayout() {
         if (!state.nodes.length) return;
         pushUndo();
+        layoutNodes();
+        showToast('Arranged around the most connected person');
+    }
+    function layoutNodes() {
+        if (!state.nodes.length) return;
         const adj = new Map(state.nodes.map(n => [n.id, []]));
         state.edges.forEach(e => { adj.get(e.from).push(e.to); adj.get(e.to).push(e.from); });
         const remaining = new Set(state.nodes.map(n => n.id));
@@ -1087,7 +1165,6 @@
             }
         })();
         fitView(true);
-        showToast('Arranged around the most connected person');
     }
 
     /* ---------- Pointer interactions ---------- */
@@ -1122,8 +1199,6 @@
             }
             const w = toWorld(ev.clientX, ev.clientY);
             drag = { type: 'node', id, dx: w.x - n.x, dy: w.y - n.y, moved: false, startX: ev.clientX, startY: ev.clientY };
-            nodeEls.forEach((el, nid) => { if (nid !== id) el.style.zIndex = ''; });
-            nodeEl.style.zIndex = 10;
             ev.preventDefault();
             return;
         }
@@ -1251,6 +1326,7 @@
         const typing = /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName);
         if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 'z') { if (!typing) { ev.preventDefault(); undo(); } return; }
         if (typing) { if (ev.key === 'Escape') document.activeElement.blur(); return; }
+        if (!gmailModal.hidden) { if (ev.key === 'Escape') closeGmail(); return; }
         if (ev.key === 'Escape') { if (linkFrom) { linkFrom = null; updateSelectionClasses(); renderPanel(); } else select(null); }
         if ((ev.key === 'Delete' || ev.key === 'Backspace') && selected.type) {
             ev.preventDefault();
@@ -1260,6 +1336,316 @@
         if (ev.key === 'f' || ev.key === 'F') fitView(true);
         if (ev.key === 'l' || ev.key === 'L') autoLayout();
     });
+
+    /* ---------- Gmail import ---------- */
+    // Optional: paste your Google OAuth Client ID here so it does not have to be entered in the browser.
+    const GOOGLE_CLIENT_ID = '';
+    const CLIENT_KEY = 'anthropic-hub-google-client-id';
+    const GMAIL_SCOPE = 'https://www.googleapis.com/auth/gmail.readonly';
+    const GMAIL_API = 'https://gmail.googleapis.com/gmail/v1/users/me';
+    const JUNK_LOCAL = /(^|[._-])(no-?reply|do-?not-?reply|notifications?|notify|mailer-daemon|postmaster|newsletters?|bounces?|alerts?|digest|updates?|marketing|calendar-notification|unsubscribe|reply\+|reply-)([._-]|@|$|\d)/i;
+    const JUNK_DOMAIN = /(^|\.)(docs\.google\.com|calendar\.google\.com|bounces\.google\.com|linkedin\.com|facebookmail\.com|twitter\.com|x\.com|slack\.com|github\.com|notion\.so|atlassian\.net|substack\.com|mailchimp\.com|sendgrid\.net|amazonses\.com|salesforce\.com|hubspot\.com|intercom-mail\.com|zendesk\.com)$/i;
+    const gmailModal = $('gmailModal'), gmailBody = $('gmailBody');
+    let gmailToken = null, gmailMe = '', gmailFound = null, gmailPairs = null, gmailScanning = false;
+
+    function getClientId() { try { return localStorage.getItem(CLIENT_KEY) || GOOGLE_CLIENT_ID; } catch (e) { return GOOGLE_CLIENT_ID; } }
+    function openGmail() { gmailModal.hidden = false; renderGmail(getClientId() ? (gmailFound ? 'review' : 'ready') : 'setup'); }
+    function closeGmail() { if (gmailScanning) return; gmailModal.hidden = true; }
+
+    function renderGmail(stage, extra) {
+        const origin = location.protocol === 'file:' ? 'the address you host this page at (for example your GitHub Pages URL)' : `<code>${escapeHtml(location.origin)}</code>`;
+        if (stage === 'setup') {
+            gmailBody.innerHTML = `
+                <p>The map reads your mailbox <b>directly from this browser</b>. Nothing is sent anywhere except Google, and nothing is stored outside this page. Google requires a free OAuth Client ID for that, which takes about two minutes to create once:</p>
+                <ol>
+                    <li>Open the <a href="https://console.cloud.google.com/apis/library/gmail.googleapis.com" target="_blank" rel="noopener">Gmail API page</a> in Google Cloud Console, create a project if asked, and click <b>Enable</b>.</li>
+                    <li>Go to <a href="https://console.cloud.google.com/auth/overview" target="_blank" rel="noopener">Google Auth platform</a>, set up the consent screen as <b>External</b>, and add your own Gmail address under <b>Test users</b>.</li>
+                    <li>Under <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Credentials</a> choose <b>Create credentials → OAuth client ID → Web application</b>, and add ${origin} as an <b>Authorized JavaScript origin</b>.</li>
+                    <li>Copy the Client ID (it ends in <code>.apps.googleusercontent.com</code>) and paste it below.</li>
+                </ol>
+                ${extra ? `<div class="error">${escapeHtml(extra)}</div>` : ''}
+                <div class="field"><input id="clientIdInput" placeholder="1234567890-abc123.apps.googleusercontent.com" value="${escapeHtml(getClientId())}" autocomplete="off" spellcheck="false"></div>
+                <div class="actions"><button class="btn primary" id="saveClientId">Save and continue</button></div>`;
+            $('saveClientId').onclick = () => {
+                const v = $('clientIdInput').value.trim();
+                if (!/\.apps\.googleusercontent\.com$/.test(v)) { renderGmail('setup', 'That does not look like a Google OAuth Client ID.'); return; }
+                try { localStorage.setItem(CLIENT_KEY, v); } catch (e) { /* ignore */ }
+                renderGmail('ready');
+            };
+            $('clientIdInput').onkeydown = (ev) => { if (ev.key === 'Enter') $('saveClientId').click(); };
+            setTimeout(() => $('clientIdInput').focus(), 50);
+        } else if (stage === 'ready') {
+            gmailBody.innerHTML = `
+                <p>Scan your recent mail to find the people you actually talk to. You pick who gets added, and everyone lands on the map already connected.</p>
+                ${extra ? `<div class="error">${escapeHtml(extra)}</div>` : ''}
+                <div class="row">
+                    <label>Look at <select id="gSource"><option value="sent">mail I sent (people I write to)</option><option value="all">all mail</option></select></label>
+                    <label>from the last <select id="gRange"><option value="1m">month</option><option value="3m" selected>3 months</option><option value="6m">6 months</option><option value="1y">year</option></select></label>
+                    <label>up to <select id="gMax"><option>200</option><option selected>500</option><option>1000</option></select> messages</label>
+                </div>
+                <div class="actions">
+                    <button class="btn google" id="gScan"><svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18A11 11 0 0 0 1 12c0 1.77.42 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>Sign in with Google and scan</button>
+                    <span class="spacer"></span>
+                    <button class="btn link" id="gChangeId">Change Client ID</button>
+                </div>`;
+            $('gScan').onclick = startGmailScan;
+            $('gChangeId').onclick = () => renderGmail('setup');
+        } else if (stage === 'scanning') {
+            gmailBody.innerHTML = `
+                <p id="gStatus">Signing in…</p>
+                <div class="progress"><i id="gBar"></i></div>
+                <p class="hint" style="font-size:12px">Reading only the From, To and Cc headers of each message. Message contents are never requested.</p>`;
+        } else if (stage === 'review') {
+            const onMap = new Set(state.nodes.map(n => (n.email || '').toLowerCase()).filter(Boolean));
+            const list = gmailFound;
+            const rows = list.map((c, i) => `
+                <label class="contact ${onMap.has(c.email) ? 'on-map' : ''}">
+                    <input type="checkbox" data-i="${i}" ${onMap.has(c.email) ? 'disabled' : (i < 25 ? 'checked' : '')}>
+                    <div class="avatar" style="--node-color:${COLORS[i % COLORS.length]}">${escapeHtml(initials(c.name))}</div>
+                    <div class="who"><b>${escapeHtml(c.name)}</b><span>${escapeHtml(c.email)}</span></div>
+                    ${onMap.has(c.email) ? '<span class="pill">on map</span>' : ''}
+                    <div class="count"><b>${c.sent + c.received}</b>${c.sent ? `${c.sent} sent` : ''}${c.sent && c.received ? ' · ' : ''}${c.received ? `${c.received} received` : ''}</div>
+                </label>`).join('');
+            gmailBody.innerHTML = `
+                <p>Found <b>${list.length}</b> people across <b>${extra || 0}</b> messages, sorted by how much you exchange with them. Pick who to add:</p>
+                <div class="row">
+                    <button class="btn" id="gTop">Top 25</button><button class="btn" id="gAll">Everyone</button><button class="btn" id="gNone">None</button>
+                    <span class="spacer"></span><span id="gCount" class="hint"></span>
+                </div>
+                <div class="contact-list" id="gList">${rows || '<div class="contact">No people found. Try a longer time range or all mail.</div>'}</div>
+                <label class="check"><input type="checkbox" id="gAddMe" checked> Put <b>me</b> at the center and connect everyone to me</label>
+                <label class="check"><input type="checkbox" id="gCoLinks" checked> Connect people who appear on the same emails</label>
+                <div class="actions">
+                    <button class="btn primary" id="gImport">Add to map</button>
+                    <button class="btn" id="gRescan">Scan again</button>
+                    <span class="spacer"></span>
+                    <button class="btn link" id="gSignOut">Sign out</button>
+                </div>`;
+            const boxes = () => [...gmailBody.querySelectorAll('.contact input:not(:disabled)')];
+            const updateCount = () => {
+                const n = boxes().filter(b => b.checked).length;
+                $('gCount').textContent = `${n} selected`;
+                $('gImport').textContent = n ? `Add ${n} ${n === 1 ? 'person' : 'people'} to map` : 'Add to map';
+                $('gImport').disabled = n === 0;
+            };
+            $('gList').onchange = updateCount;
+            $('gTop').onclick = () => { boxes().forEach((b, i) => b.checked = i < 25); updateCount(); };
+            $('gAll').onclick = () => { boxes().forEach(b => b.checked = true); updateCount(); };
+            $('gNone').onclick = () => { boxes().forEach(b => b.checked = false); updateCount(); };
+            $('gRescan').onclick = () => { gmailFound = null; renderGmail('ready'); };
+            $('gSignOut').onclick = () => {
+                if (gmailToken && window.google && google.accounts) { try { google.accounts.oauth2.revoke(gmailToken, () => {}); } catch (e) { /* ignore */ } }
+                gmailToken = null; gmailFound = null; gmailPairs = null; renderGmail('ready');
+            };
+            $('gImport').onclick = () => {
+                const picked = boxes().filter(b => b.checked).map(b => list[+b.dataset.i]);
+                importContacts(picked, { addMe: $('gAddMe').checked, coLinks: $('gCoLinks').checked });
+            };
+            updateCount();
+        }
+    }
+
+    function loadGoogleSignIn() {
+        return new Promise((resolve, reject) => {
+            if (window.google && google.accounts && google.accounts.oauth2) return resolve();
+            const s = document.createElement('script');
+            s.src = 'https://accounts.google.com/gsi/client'; s.async = true;
+            s.onload = resolve;
+            s.onerror = () => reject(new Error('Could not load Google sign-in. Check your connection or an ad blocker.'));
+            document.head.appendChild(s);
+        });
+    }
+    function requestGmailToken(force) {
+        if (gmailToken && !force) return Promise.resolve(gmailToken);
+        return new Promise((resolve, reject) => {
+            const client = google.accounts.oauth2.initTokenClient({
+                client_id: getClientId(),
+                scope: GMAIL_SCOPE,
+                callback: (r) => {
+                    if (r.error) return reject(new Error(r.error_description || r.error));
+                    if (r.scope && !r.scope.includes('gmail.readonly')) return reject(new Error('Gmail read access was not granted.'));
+                    gmailToken = r.access_token; resolve(gmailToken);
+                },
+                error_callback: (e) => reject(new Error(e && e.type === 'popup_closed' ? 'Sign-in window was closed.' : (e && (e.message || e.type)) || 'Sign-in failed'))
+            });
+            client.requestAccessToken({ prompt: force ? 'consent' : '' });
+        });
+    }
+    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+    async function gmailFetch(url) {
+        for (let attempt = 0; attempt < 5; attempt++) {
+            const r = await fetch(url, { headers: { Authorization: 'Bearer ' + gmailToken } });
+            if (r.status === 429 || r.status >= 500) { await sleep(400 * Math.pow(2, attempt)); continue; }
+            if (r.status === 401) { gmailToken = null; throw new Error('Your Google sign-in expired. Please sign in again.'); }
+            if (!r.ok) {
+                const body = await r.json().catch(() => ({}));
+                const msg = body.error && body.error.message ? body.error.message : `Gmail API error ${r.status}`;
+                throw new Error(/not been used|is disabled|accessNotConfigured/i.test(msg) ? 'The Gmail API is not enabled for your Google Cloud project yet. Enable it and try again.' : msg);
+            }
+            return r.json();
+        }
+        throw new Error('Gmail is rate limiting requests. Wait a minute and try again.');
+    }
+
+    function parseAddresses(header) {
+        const out = [];
+        if (!header) return out;
+        // Split on commas that are not inside quotes or angle brackets.
+        const parts = []; let cur = '', quoted = false, angle = 0;
+        for (const ch of header) {
+            if (ch === '"') quoted = !quoted;
+            else if (!quoted && ch === '<') angle++;
+            else if (!quoted && ch === '>') angle = Math.max(0, angle - 1);
+            if (ch === ',' && !quoted && angle === 0) { parts.push(cur); cur = ''; } else cur += ch;
+        }
+        parts.push(cur);
+        parts.forEach(raw => {
+            const m = raw.match(/^\s*(?:"?([^"<]*?)"?\s*)?<\s*([^>]+?)\s*>\s*$/);
+            let name = '', email = '';
+            if (m) { name = (m[1] || '').trim(); email = m[2].trim(); }
+            else { const e = raw.match(/[\w.+-]+@[\w-]+(\.[\w-]+)+/); if (e) email = e[0]; }
+            email = email.toLowerCase().replace(/^mailto:/, '');
+            if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return;
+            name = name.replace(/^'+|'+$/g, '').trim();
+            // "Last, First" becomes "First Last".
+            if (/^[^,]+,\s*[^,]+$/.test(name)) name = name.split(',').map(x => x.trim()).reverse().join(' ');
+            let derived = false;
+            if (!name || name.toLowerCase() === email || /@/.test(name)) { name = nameFromEmail(email); derived = true; }
+            out.push({ name, email, derived });
+        });
+        return out;
+    }
+    function nameFromEmail(email) {
+        const local = email.split('@')[0].replace(/\+.*$/, '').replace(/\d+$/, '');
+        const words = local.split(/[._-]+/).filter(Boolean);
+        return words.map(w => w[0].toUpperCase() + w.slice(1)).join(' ') || email;
+    }
+    function isJunk(email) {
+        const [local, domain] = email.split('@');
+        return JUNK_LOCAL.test(local) || JUNK_DOMAIN.test(domain);
+    }
+    function header(msg, name) {
+        const h = msg.payload && msg.payload.headers ? msg.payload.headers.find(x => x.name.toLowerCase() === name.toLowerCase()) : null;
+        return h ? h.value : '';
+    }
+
+    async function startGmailScan() {
+        const source = $('gSource').value, range = $('gRange').value, max = +$('gMax').value;
+        gmailScanning = true;
+        renderGmail('scanning');
+        const status = (t, frac) => { const el = $('gStatus'); if (el) el.textContent = t; const bar = $('gBar'); if (bar && frac != null) bar.style.width = Math.round(frac * 100) + '%'; };
+        try {
+            await loadGoogleSignIn();
+            await requestGmailToken(false);
+            status('Checking your account…', 0.02);
+            const profile = await gmailFetch(`${GMAIL_API}/profile`);
+            gmailMe = (profile.emailAddress || '').toLowerCase();
+            const q = encodeURIComponent(`newer_than:${range} ` + (source === 'sent' ? 'in:sent' : '-category:promotions -category:social -category:forums -in:spam -in:trash'));
+            const ids = []; let pageToken = '';
+            do {
+                status(`Listing messages… ${ids.length}`, 0.05);
+                const page = await gmailFetch(`${GMAIL_API}/messages?maxResults=100&q=${q}${pageToken ? '&pageToken=' + pageToken : ''}`);
+                (page.messages || []).forEach(m => ids.push(m.id));
+                pageToken = page.nextPageToken || '';
+            } while (pageToken && ids.length < max);
+            ids.length = Math.min(ids.length, max);
+            const contacts = new Map(), pairs = new Map();
+            let done = 0, idx = 0;
+            const touch = (a, kind) => {
+                if (a.email === gmailMe || isJunk(a.email)) return null;
+                let c = contacts.get(a.email);
+                if (!c) { c = { email: a.email, name: a.name, sent: 0, received: 0, names: {} }; contacts.set(a.email, c); }
+                c[kind]++;
+                // Real display names always beat names guessed from the address.
+                c.names[a.name] = (c.names[a.name] || 0) + (a.derived ? 1 : 1000);
+                return c;
+            };
+            const worker = async () => {
+                while (idx < ids.length) {
+                    const id = ids[idx++];
+                    const msg = await gmailFetch(`${GMAIL_API}/messages/${id}?format=metadata&metadataHeaders=From&metadataHeaders=To&metadataHeaders=Cc`);
+                    const from = parseAddresses(header(msg, 'From'));
+                    const to = parseAddresses(header(msg, 'To')).concat(parseAddresses(header(msg, 'Cc')));
+                    const fromMe = from.some(a => a.email === gmailMe);
+                    const people = [];
+                    from.forEach(a => { const c = touch(a, fromMe ? 'sent' : 'received'); if (c) people.push(c.email); });
+                    to.forEach(a => { const c = touch(a, fromMe ? 'sent' : 'received'); if (c) people.push(c.email); });
+                    const uniq = [...new Set(people)];
+                    for (let i = 0; i < uniq.length; i++) for (let j = i + 1; j < uniq.length; j++) {
+                        const key = [uniq[i], uniq[j]].sort().join('|');
+                        pairs.set(key, (pairs.get(key) || 0) + 1);
+                    }
+                    done++;
+                    status(`Reading message headers… ${done} of ${ids.length}`, 0.08 + 0.92 * done / Math.max(1, ids.length));
+                }
+            };
+            await Promise.all(Array.from({ length: 6 }, worker));
+            gmailFound = [...contacts.values()].map(c => {
+                // Prefer the display name that appeared most often, but never a bare email.
+                c.name = Object.entries(c.names).sort((a, b) => b[1] - a[1])[0][0];
+                delete c.names;
+                return c;
+            }).sort((a, b) => (b.sent * 3 + b.received) - (a.sent * 3 + a.received));
+            gmailPairs = pairs;
+            gmailScanning = false;
+            renderGmail('review', ids.length);
+        } catch (err) {
+            gmailScanning = false;
+            const msg = (err && err.message) || 'Something went wrong';
+            if (/invalid_client|unauthorized_client|origin|redirect_uri|idpiframe|Not a valid origin/i.test(msg)) {
+                renderGmail('setup', `Google rejected the Client ID for this page (${msg}). Check that ${location.origin} is listed as an authorized JavaScript origin.`);
+            } else renderGmail('ready', msg);
+        }
+    }
+
+    function importContacts(picked, opts) {
+        if (!picked.length) return;
+        pushUndo();
+        const byEmail = new Map(state.nodes.filter(n => n.email).map(n => [n.email.toLowerCase(), n]));
+        let colorIdx = state.nodes.length;
+        const make = (name, role, email, color) => {
+            const n = { id: uid(), name, role, email, color: color || COLORS[colorIdx++ % COLORS.length], x: (Math.random() - 0.5) * 400, y: (Math.random() - 0.5) * 300 };
+            state.nodes.push(n); byEmail.set(email, n); return n;
+        };
+        const link = (a, b) => {
+            if (a === b || state.edges.some(e => (e.from === a && e.to === b) || (e.from === b && e.to === a))) return false;
+            state.edges.push({ id: uid(), from: a, to: b, label: '' }); return true;
+        };
+        let me = null;
+        if (opts.addMe && gmailMe) {
+            me = byEmail.get(gmailMe) || state.nodes.find(n => /^(me|you)$/i.test(n.name.trim())) || make('Me', 'That is you', gmailMe, COLORS[6]);
+            if (!me.email) me.email = gmailMe;
+        }
+        const created = [];
+        picked.forEach(c => {
+            if (byEmail.has(c.email)) return;
+            created.push(make(c.name, c.email.split('@')[1], c.email));
+        });
+        let links = 0;
+        if (me) created.forEach(n => { if (link(me.id, n.id)) links++; });
+        if (opts.coLinks && gmailPairs) {
+            const perNode = new Map();
+            const candidates = [...gmailPairs.entries()].filter(([, count]) => count >= 2).sort((a, b) => b[1] - a[1]);
+            candidates.forEach(([key]) => {
+                const [ea, eb] = key.split('|');
+                const a = byEmail.get(ea), b = byEmail.get(eb);
+                if (!a || !b) return;
+                if (!created.includes(a) && !created.includes(b)) return;
+                if ((perNode.get(a.id) || 0) >= 4 || (perNode.get(b.id) || 0) >= 4) return;
+                if (link(a.id, b.id)) { links++; perNode.set(a.id, (perNode.get(a.id) || 0) + 1); perNode.set(b.id, (perNode.get(b.id) || 0) + 1); }
+            });
+        }
+        select(null);
+        renderAll();
+        layoutNodes();
+        gmailModal.hidden = true;
+        showToast(`Added ${created.length} ${created.length === 1 ? 'person' : 'people'} and ${links} connections from Gmail`);
+    }
+
+    $('gmailBtn').onclick = openGmail;
+    $('emptyGmail').onclick = openGmail;
+    $('gmailClose').onclick = closeGmail;
+    gmailModal.addEventListener('pointerdown', (ev) => { if (ev.target === gmailModal) closeGmail(); });
 
     /* ---------- Toolbar ---------- */
     $('addBtn').onclick = () => {
