@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>People Mind Map — Anthropic Hub</title>
+    <meta name="description" content="Interactive drag and drop mind map for mapping people and the connections between them.">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --primary: #d4a574;
+            --bg-dark: #1a1a2e;
+            --bg-card: #16213e;
+            --text: #e8e8e8;
+            --text-muted: #a0a0b0;
+            --accent-green: #4ecca3;
+            --accent-blue: #6c9bff;
+            --accent-purple: #b06cff;
+            --accent-orange: #ff8c42;
+            --accent-red: #ff6b6b;
+            --accent-teal: #45b7aa;
+            --glass: rgba(22, 33, 62, 0.78);
+            --glass-strong: rgba(22, 33, 62, 0.94);
+            --glass-border: rgba(255, 255, 255, 0.09);
+            --grid-dot: rgba(255, 255, 255, 0.09);
+            --node-bg: rgba(26, 39, 69, 0.92);
+            --node-border: rgba(255, 255, 255, 0.10);
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+            --blob-a: rgba(176, 108, 255, 0.22);
+            --blob-b: rgba(108, 155, 255, 0.18);
+            --blob-c: rgba(212, 165, 116, 0.14);
+            --input-bg: rgba(255, 255, 255, 0.05);
+        }
+
+        [data-theme="light"] {
+            --primary: #9a6b3a;
+            --bg-dark: #f5f5f7;
+            --bg-card: #ffffff;
+            --text: #1a1a2e;
+            --text-muted: #5a5a70;
+            --accent-green: #2a9d6e;
+            --accent-blue: #3b6fd4;
+            --accent-purple: #7b3ecf;
+            --accent-orange: #d4702e;
+            --accent-red: #d44545;
+            --accent-teal: #2e9488;
+            --glass: rgba(255, 255, 255, 0.78);
+            --glass-strong: rgba(255, 255, 255, 0.95);
+            --glass-border: rgba(0, 0, 0, 0.08);
+            --grid-dot: rgba(0, 0, 0, 0.12);
+            --node-bg: rgba(255, 255, 255, 0.94);
+            --node-border: rgba(0, 0, 0, 0.08);
+            --shadow: 0 10px 30px rgba(20, 20, 60, 0.15);
+            --blob-a: rgba(123, 62, 207, 0.16);
+            --blob-b: rgba(59, 111, 212, 0.14);
+            --blob-c: rgba(154, 107, 58, 0.12);
+            --input-bg: rgba(0, 0, 0, 0.04);
+        }
+
+        html, body { height: 100%; overflow: hidden; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            transition: background 0.3s ease, color 0.3s ease;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .app { position: fixed; inset: 0; }
+
+        /* Ambient background blobs */
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(90px);
+            pointer-events: none;
+            z-index: 0;
+            animation: drift 22s ease-in-out infinite alternate;
+        }
+        .blob-a { width: 55vw; height: 55vw; left: -15vw; top: -20vw; background: var(--blob-a); }
+        .blob-b { width: 50vw; height: 50vw; right: -15vw; bottom: -20vw; background: var(--blob-b); animation-delay: -8s; }
+        .blob-c { width: 35vw; height: 35vw; right: 20vw; top: -10vw; background: var(--blob-c); animation-delay: -15s; }
+        @keyframes drift {
+            from { transform: translate(0, 0) scale(1); }
+            to { transform: translate(6vw, 4vw) scale(1.12); }
+        }
+
+        /* Canvas */
+        .canvas {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            overflow: hidden;
+            cursor: grab;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            background-image: radial-gradient(var(--grid-dot) 1.2px, transparent 1.2px);
+            background-size: 26px 26px;
+        }
+        .canvas.panning { cursor: grabbing; }
+        .canvas.linking { cursor: crosshair; }
+        .canvas.linking .node { cursor: crosshair; }
+
+        .world {
+            position: absolute;
+            left: 0; top: 0;
+            transform-origin: 0 0;
+            will-change: transform;
+        }
+
+        svg.edges {
+            position: absolute;
+            left: 0; top: 0;
+            width: 1px; height: 1px;
+            overflow: visible;
+            pointer-events: none;
+        }
+        .edge-hit {
+            fill: none;
+            stroke: transparent;
+            stroke-width: 22;
+            pointer-events: stroke;
+            cursor: pointer;
+        }
+        .edge {
+            fill: none;
+            stroke-width: 3;
+            stroke-linecap: round;
+            pointer-events: none;
+            transition: stroke-width 0.15s ease, opacity 0.2s ease;
+            opacity: 0.85;
+        }
+        .edge-g:hover .edge { stroke-width: 5; opacity: 1; }
+        .edge-g.selected .edge { stroke-width: 5.5; opacity: 1; filter: drop-shadow(0 0 6px rgba(255,255,255,0.35)); }
+        .edge-g.selected .edge-glow { opacity: 0.55; }
+        .edge-glow {
+            fill: none;
+            stroke-width: 14;
+            stroke-linecap: round;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+        .edge-g:hover .edge-glow { opacity: 0.3; }
+        .edge-flow {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.55);
+            stroke-width: 2;
+            stroke-dasharray: 2 14;
+            stroke-linecap: round;
+            pointer-events: none;
+            animation: flow 1.4s linear infinite;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        .edge-g:hover .edge-flow, .edge-g.selected .edge-flow { opacity: 1; }
+        @keyframes flow { to { stroke-dashoffset: -16; } }
+        .edge-label-bg { fill: var(--bg-card); stroke: var(--glass-border); rx: 8; }
+        .edge-label { font-size: 12px; font-weight: 600; fill: var(--text-muted); text-anchor: middle; dominant-baseline: middle; pointer-events: none; }
+        .temp-edge {
+            fill: none;
+            stroke: var(--primary);
+            stroke-width: 3;
+            stroke-dasharray: 8 8;
+            stroke-linecap: round;
+            animation: flow 0.6s linear infinite;
+            pointer-events: none;
+        }
+
+        /* Nodes */
+        .nodes { position: absolute; left: 0; top: 0; }
+        .node {
+            position: absolute;
+            left: 0; top: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 170px;
+            max-width: 260px;
+            padding: 10px 34px 10px 10px;
+            background: var(--node-bg);
+            border: 1px solid var(--node-border);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            cursor: grab;
+            transition: box-shadow 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+            will-change: transform;
+        }
+        .node::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 19px;
+            padding: 1px;
+            background: linear-gradient(135deg, var(--node-color), transparent 55%);
+            -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0.6;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+        .node:hover { border-color: var(--node-color); }
+        .node:hover::before { opacity: 1; }
+        .node.dragging { cursor: grabbing; box-shadow: 0 22px 50px rgba(0,0,0,0.5); z-index: 10; }
+        .node.selected {
+            box-shadow: 0 0 0 3px var(--node-color), 0 0 32px var(--node-color), var(--shadow);
+            z-index: 5;
+        }
+        .node.link-target { box-shadow: 0 0 0 3px var(--accent-green), 0 0 30px var(--accent-green); }
+        .node.link-source { box-shadow: 0 0 0 3px var(--primary), 0 0 30px var(--primary); }
+        .node.dim { opacity: 0.35; }
+        .node.pop { animation: pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        @keyframes pop { from { scale: 0.4; opacity: 0; } to { scale: 1; opacity: 1; } }
+        .nodes.animate .node { transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease; }
+
+        .avatar {
+            flex: 0 0 auto;
+            width: 44px; height: 44px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-weight: 800;
+            font-size: 15px;
+            letter-spacing: 0.5px;
+            color: #fff;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.35);
+            background: linear-gradient(135deg, var(--node-color), color-mix(in srgb, var(--node-color) 55%, #000));
+            box-shadow: 0 4px 14px color-mix(in srgb, var(--node-color) 55%, transparent);
+            pointer-events: none;
+        }
+        .meta { min-width: 0; pointer-events: none; }
+        .name {
+            font-weight: 700;
+            font-size: 14.5px;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .role {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .role:empty { display: none; }
+        .badge {
+            position: absolute;
+            top: -8px; left: 12px;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 999px;
+            background: var(--node-color);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            pointer-events: none;
+        }
+        .port {
+            position: absolute;
+            right: -13px;
+            top: 50%;
+            width: 26px; height: 26px;
+            margin-top: -13px;
+            border-radius: 50%;
+            background: var(--node-color);
+            border: 3px solid var(--bg-dark);
+            display: grid;
+            place-items: center;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 800;
+            line-height: 1;
+            cursor: crosshair;
+            opacity: 0;
+            transform: scale(0.6);
+            transition: opacity 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+            z-index: 2;
+        }
+        .node:hover .port, .node.selected .port { opacity: 1; transform: scale(1); }
+        .port:hover { transform: scale(1.2); box-shadow: 0 0 0 5px color-mix(in srgb, var(--node-color) 35%, transparent); }
+        .port::after { content: '+'; margin-top: -1px; }
+
+        /* Edge delete tool */
+        .edge-tool {
+            position: absolute;
+            left: 0; top: 0;
+            width: 30px; height: 30px;
+            margin: -15px 0 0 -15px;
+            border-radius: 50%;
+            background: var(--accent-red);
+            color: #fff;
+            border: 3px solid var(--bg-dark);
+            display: none;
+            place-items: center;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 6px 18px rgba(255, 107, 107, 0.45);
+            transition: transform 0.15s ease;
+            z-index: 20;
+        }
+        .edge-tool.show { display: grid; animation: pop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .edge-tool:hover { transform: scale(1.15); }
+
+        /* Glass UI */
+        .glass {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(18px) saturate(1.3);
+            -webkit-backdrop-filter: blur(18px) saturate(1.3);
+            box-shadow: var(--shadow);
+            border-radius: 18px;
+        }
+
+        .topbar {
+            position: absolute;
+            top: 16px; left: 16px; right: 16px;
+            z-index: 30;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            flex-wrap: wrap;
+            pointer-events: none;
+        }
+        .topbar > * { pointer-events: auto; }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text);
+            padding: 4px 8px 4px 4px;
+            margin-right: 6px;
+        }
+        .brand .logo {
+            width: 34px; height: 34px;
+            border-radius: 10px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            color: #fff;
+            font-weight: 800;
+            box-shadow: 0 6px 16px rgba(176,108,255,0.35);
+        }
+        .brand strong { font-size: 15px; letter-spacing: 0.2px; }
+        .brand span { display: block; font-size: 11px; color: var(--text-muted); font-weight: 500; }
+        .sep { width: 1px; height: 26px; background: var(--glass-border); margin: 0 4px; }
+
+        .btn {
+            appearance: none;
+            border: 1px solid var(--glass-border);
+            background: var(--input-bg);
+            color: var(--text);
+            font: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 8px 13px;
+            border-radius: 11px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+            white-space: nowrap;
+        }
+        .btn:hover { border-color: var(--primary); transform: translateY(-1px); }
+        .btn:active { transform: translateY(0) scale(0.97); }
+        .btn.primary {
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 6px 18px rgba(108,155,255,0.35);
+        }
+        .btn.primary:hover { box-shadow: 0 10px 24px rgba(108,155,255,0.5); }
+        .btn.danger { color: var(--accent-red); }
+        .btn.danger:hover { border-color: var(--accent-red); background: rgba(255,107,107,0.1); }
+        .btn.icon { padding: 8px 10px; }
+        .btn:disabled { opacity: 0.4; cursor: default; transform: none; }
+        .btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+        .btn.active { border-color: var(--accent-green); color: var(--accent-green); background: rgba(78,204,163,0.12); }
+
+        .stats {
+            margin-left: auto;
+            display: flex;
+            gap: 14px;
+            font-size: 12px;
+            color: var(--text-muted);
+            padding: 0 6px;
+        }
+        .stats b { color: var(--text); font-size: 14px; margin-right: 3px; }
+
+        /* Panel */
+        .panel {
+            position: absolute;
+            right: 16px;
+            top: 88px;
+            width: 300px;
+            z-index: 30;
+            padding: 18px;
+            transform: translateX(340px);
+            opacity: 0;
+            transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
+        }
+        .panel.open { transform: translateX(0); opacity: 1; }
+        .panel h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-muted); margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+        .panel .close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 18px; line-height: 1; padding: 2px 6px; border-radius: 6px; }
+        .panel .close:hover { color: var(--text); background: var(--input-bg); }
+        .field { margin-bottom: 12px; }
+        .field label { display: block; font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 5px; }
+        .field input {
+            width: 100%;
+            font: inherit;
+            font-size: 14px;
+            color: var(--text);
+            background: var(--input-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 9px 11px;
+            outline: none;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        .field input:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(108,155,255,0.2); }
+        .swatches { display: flex; gap: 8px; flex-wrap: wrap; }
+        .swatch {
+            width: 26px; height: 26px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: transform 0.12s ease, border-color 0.12s ease;
+        }
+        .swatch:hover { transform: scale(1.15); }
+        .swatch.on { border-color: var(--text); transform: scale(1.15); }
+        .panel-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+        .panel-actions .btn { justify-content: center; }
+        .connections { margin-top: 12px; }
+        .connections .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            padding: 5px 8px 5px 6px;
+            border-radius: 999px;
+            background: var(--input-bg);
+            border: 1px solid var(--glass-border);
+            margin: 0 6px 6px 0;
+            cursor: pointer;
+        }
+        .connections .chip:hover { border-color: var(--primary); }
+        .connections .dot { width: 10px; height: 10px; border-radius: 50%; }
+        .connections .chip .x { color: var(--text-muted); font-weight: 700; margin-left: 2px; }
+        .connections .chip .x:hover { color: var(--accent-red); }
+        .hint { font-size: 12.5px; color: var(--text-muted); line-height: 1.55; }
+        .hint kbd {
+            font-family: inherit;
+            font-size: 11px;
+            padding: 1px 6px;
+            border-radius: 5px;
+            border: 1px solid var(--glass-border);
+            background: var(--input-bg);
+            color: var(--text);
+        }
+        .hint p { margin-bottom: 8px; }
+
+        /* Zoom controls */
+        .zoombar {
+            position: absolute;
+            right: 16px; bottom: 16px;
+            z-index: 30;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px;
+        }
+        .zoombar .btn { padding: 7px 10px; border-color: transparent; background: transparent; }
+        .zoombar .btn:hover { background: var(--input-bg); }
+        .zoombar .zoom-level { font-size: 12px; color: var(--text-muted); width: 46px; text-align: center; font-variant-numeric: tabular-nums; }
+
+        /* Tips (bottom left) */
+        .tips {
+            position: absolute;
+            left: 16px; bottom: 16px;
+            z-index: 30;
+            padding: 12px 16px;
+            font-size: 12.5px;
+            color: var(--text-muted);
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            max-width: calc(100vw - 260px);
+        }
+        .tips span { display: inline-flex; align-items: center; gap: 6px; }
+        .tips i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; }
+
+        /* Empty state */
+        .empty {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            z-index: 2;
+            pointer-events: none;
+            text-align: center;
+        }
+        .empty[hidden] { display: none; }
+        .empty .box { pointer-events: auto; padding: 36px 40px; max-width: 420px; }
+        .empty h2 { font-size: 22px; margin-bottom: 8px; }
+        .empty p { color: var(--text-muted); font-size: 14px; line-height: 1.5; margin-bottom: 18px; }
+        .empty .btn { margin: 4px; }
+
+        /* Toast */
+        .toast {
+            position: absolute;
+            left: 50%; bottom: 24px;
+            transform: translate(-50%, 20px);
+            z-index: 50;
+            padding: 10px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.25s ease, opacity 0.25s ease;
+        }
+        .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+        @media (max-width: 760px) {
+            .topbar { top: 10px; left: 10px; right: 10px; gap: 6px; padding: 8px; }
+            .brand span, .stats, .btn .label { display: none; }
+            .btn { padding: 8px 10px; }
+            .panel {
+                right: 10px; left: 10px; bottom: 74px; top: auto; width: auto;
+                transform: translateY(120%);
+            }
+            .panel.open { transform: translateY(0); }
+            .tips { display: none; }
+            .zoombar { bottom: 10px; right: 10px; }
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <div class="blob blob-a"></div>
+    <div class="blob blob-b"></div>
+    <div class="blob blob-c"></div>
+
+    <div class="canvas" id="canvas">
+        <div class="world" id="world">
+            <svg class="edges" id="edges" xmlns="http://www.w3.org/2000/svg">
+                <defs id="defs"></defs>
+                <g id="edgeLayer"></g>
+                <path id="tempEdge" class="temp-edge" d="" style="display:none"></path>
+            </svg>
+            <div class="nodes" id="nodes"></div>
+            <div class="edge-tool" id="edgeTool" title="Remove connection">✕</div>
+        </div>
+    </div>
+
+    <div class="empty" id="empty" hidden>
+        <div class="box glass">
+            <h2>Your map is empty</h2>
+            <p>Add people, drag them around, and pull the <b>+</b> handle from one person to another to connect them.</p>
+            <button class="btn primary" id="emptyAdd">Add your first person</button>
+            <button class="btn" id="emptySeed">Load sample map</button>
+        </div>
+    </div>
+
+    <div class="topbar glass">
+        <a class="brand" href="index.html" title="Back to Anthropic Hub">
+            <div class="logo">A</div>
+            <div><strong>Mind Map</strong><span>Anthropic Hub</span></div>
+        </a>
+        <div class="sep"></div>
+        <button class="btn primary" id="addBtn" title="Add a person (or double click the canvas)">
+            <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span class="label">Add person</span>
+        </button>
+        <button class="btn" id="layoutBtn" title="Arrange everyone automatically">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><circle cx="4" cy="6" r="2"/><circle cx="20" cy="6" r="2"/><circle cx="4" cy="18" r="2"/><circle cx="20" cy="18" r="2"/><path d="M6 7l4 3M14 10l4-3M6 17l4-3M14 14l4 3"/></svg><span class="label">Auto layout</span>
+        </button>
+        <button class="btn" id="undoBtn" title="Undo (Ctrl+Z)" disabled>
+            <svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg><span class="label">Undo</span>
+        </button>
+        <div class="sep"></div>
+        <button class="btn" id="exportBtn" title="Download map as JSON">
+            <svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 17v3h16v-3"/></svg><span class="label">Export</span>
+        </button>
+        <button class="btn" id="importBtn" title="Load a map from JSON">
+            <svg viewBox="0 0 24 24"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M4 17v3h16v-3"/></svg><span class="label">Import</span>
+        </button>
+        <input type="file" id="fileInput" accept="application/json,.json" hidden>
+        <button class="btn danger" id="clearBtn" title="Remove everyone">
+            <svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg><span class="label">Clear</span>
+        </button>
+        <div class="stats"><span><b id="statPeople">0</b>people</span><span><b id="statLinks">0</b>connections</span></div>
+        <button class="btn icon" id="themeBtn" title="Toggle theme">🌙</button>
+    </div>
+
+    <aside class="panel glass" id="panel"></aside>
+
+    <div class="zoombar glass">
+        <button class="btn" id="zoomOut" title="Zoom out">−</button>
+        <div class="zoom-level" id="zoomLevel">100%</div>
+        <button class="btn" id="zoomIn" title="Zoom in">+</button>
+        <button class="btn" id="fitBtn" title="Fit everything on screen">Fit</button>
+    </div>
+
+    <div class="tips glass">
+        <span><i style="background:var(--accent-blue)"></i>Drag people to move them</span>
+        <span><i style="background:var(--accent-green)"></i>Pull the + handle onto someone to connect</span>
+        <span><i style="background:var(--accent-orange)"></i>Drop the handle on empty space to create a linked person</span>
+        <span><i style="background:var(--accent-red)"></i>Click a line, then ✕ to remove it</span>
+    </div>
+
+    <div class="toast glass" id="toast"></div>
+</div>
+
+<script>
+(function () {
+    'use strict';
+
+    const STORAGE_KEY = 'anthropic-hub-mindmap';
+    const THEME_KEY = 'anthropic-hub-theme';
+    const COLORS = ['#b06cff', '#6c9bff', '#4ecca3', '#ff8c42', '#ff6b6b', '#45b7aa', '#d4a574', '#ff6fb5'];
+
+    const $ = (id) => document.getElementById(id);
+    const canvas = $('canvas'), world = $('world'), nodesLayer = $('nodes');
+    const edgeLayer = $('edgeLayer'), defs = $('defs'), tempEdge = $('tempEdge'), edgeTool = $('edgeTool');
+    const panel = $('panel'), toast = $('toast'), emptyState = $('empty');
+
+    /* ---------- State ---------- */
+    let state = { nodes: [], edges: [] };
+    let view = { x: 0, y: 0, k: 1 };
+    let selected = { type: null, id: null };
+    let linkFrom = null;            // id of node when "Connect to…" mode is active
+    let undoStack = [];
+    const nodeEls = new Map();
+    const edgeEls = new Map();
+
+    const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-3);
+    const initials = (name) => (name || '').trim().split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('') || '?';
+    const nodeById = (id) => state.nodes.find(n => n.id === id);
+    const escapeHtml = (s) => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+    function sampleData() {
+        const mk = (name, role, color, x, y) => ({ id: uid(), name, role, color, x, y });
+        const dario = mk('Dario Amodei', 'CEO & Co-founder', COLORS[0], 0, 0);
+        const daniela = mk('Daniela Amodei', 'President & Co-founder', COLORS[1], -320, -170);
+        const jared = mk('Jared Kaplan', 'Chief Science Officer', COLORS[2], 320, -170);
+        const jack = mk('Jack Clark', 'Head of Policy', COLORS[3], -320, 170);
+        const mike = mk('Mike Krieger', 'Chief Product Officer', COLORS[5], 320, 170);
+        const claude = mk('Claude', 'The model family', COLORS[6], 0, 320);
+        const nodes = [dario, daniela, jared, jack, mike, claude];
+        const link = (a, b, label) => ({ id: uid(), from: a.id, to: b.id, label: label || '' });
+        const edges = [
+            link(dario, daniela, 'siblings'),
+            link(dario, jared, 'research'),
+            link(dario, jack, 'policy'),
+            link(dario, mike, 'product'),
+            link(jared, claude, 'builds'),
+            link(mike, claude, 'ships'),
+        ];
+        return { nodes, edges };
+    }
+
+    /* ---------- Persistence ---------- */
+    let saveTimer = null;
+    function save() {
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(() => {
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ state, view })); } catch (e) { /* ignore */ }
+        }, 150);
+    }
+    function load() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return false;
+            const data = JSON.parse(raw);
+            if (data && data.state && Array.isArray(data.state.nodes)) {
+                state = sanitize(data.state);
+                if (data.view) view = data.view;
+                return true;
+            }
+        } catch (e) { /* ignore */ }
+        return false;
+    }
+    function sanitize(s) {
+        const nodes = (s.nodes || []).filter(n => n && n.id).map(n => ({
+            id: String(n.id), name: String(n.name || 'Unnamed'), role: String(n.role || ''),
+            color: COLORS.includes(n.color) ? n.color : COLORS[0], x: +n.x || 0, y: +n.y || 0
+        }));
+        const ids = new Set(nodes.map(n => n.id));
+        const seen = new Set();
+        const edges = (s.edges || []).filter(e => e && ids.has(e.from) && ids.has(e.to) && e.from !== e.to).filter(e => {
+            const key = [e.from, e.to].sort().join('|');
+            if (seen.has(key)) return false;
+            seen.add(key); return true;
+        }).map(e => ({ id: String(e.id || uid()), from: e.from, to: e.to, label: String(e.label || '') }));
+        return { nodes, edges };
+    }
+
+    /* ---------- Undo ---------- */
+    function pushUndo() {
+        const snap = JSON.stringify(state);
+        if (undoStack[undoStack.length - 1] === snap) return;
+        undoStack.push(snap);
+        if (undoStack.length > 60) undoStack.shift();
+        $('undoBtn').disabled = false;
+    }
+    function undo() {
+        if (!undoStack.length) return;
+        state = JSON.parse(undoStack.pop());
+        $('undoBtn').disabled = undoStack.length === 0;
+        if (selected.id && !(selected.type === 'node' ? nodeById(selected.id) : state.edges.find(e => e.id === selected.id))) select(null);
+        renderAll();
+        showToast('Undone');
+    }
+
+    /* ---------- View / transform ---------- */
+    function applyView() {
+        world.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.k})`;
+        canvas.style.backgroundSize = `${26 * view.k}px ${26 * view.k}px`;
+        canvas.style.backgroundPosition = `${view.x}px ${view.y}px`;
+        $('zoomLevel').textContent = Math.round(view.k * 100) + '%';
+        save();
+    }
+    const toWorld = (sx, sy) => ({ x: (sx - view.x) / view.k, y: (sy - view.y) / view.k });
+    function zoomAt(sx, sy, factor) {
+        const k = Math.min(2.5, Math.max(0.25, view.k * factor));
+        const w = toWorld(sx, sy);
+        view.k = k;
+        view.x = sx - w.x * k;
+        view.y = sy - w.y * k;
+        applyView();
+    }
+    function fitView(animate) {
+        if (!state.nodes.length) { view = { x: canvas.clientWidth / 2, y: canvas.clientHeight / 2, k: 1 }; applyView(); return; }
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        state.nodes.forEach(n => {
+            const s = nodeSize(n.id);
+            minX = Math.min(minX, n.x); minY = Math.min(minY, n.y);
+            maxX = Math.max(maxX, n.x + s.w); maxY = Math.max(maxY, n.y + s.h);
+        });
+        const W = canvas.clientWidth, H = canvas.clientHeight;
+        const padX = 60, padTop = 100, padBottom = 90;
+        const k = Math.min(1.4, Math.max(0.25, Math.min((W - padX * 2) / (maxX - minX || 1), (H - padTop - padBottom) / (maxY - minY || 1))));
+        const target = { k, x: (W - (maxX + minX) * k) / 2, y: padTop + ((H - padTop - padBottom) - (maxY - minY) * k) / 2 - minY * k };
+        if (animate) {
+            world.style.transition = 'transform 0.5s cubic-bezier(0.22, 1, 0.36, 1)';
+            setTimeout(() => { world.style.transition = ''; }, 520);
+        }
+        view = target;
+        applyView();
+    }
+
+    /* ---------- Geometry ---------- */
+    function nodeSize(id) {
+        const el = nodeEls.get(id);
+        return el ? { w: el.offsetWidth, h: el.offsetHeight } : { w: 190, h: 66 };
+    }
+    function nodeCenter(id) {
+        const n = nodeById(id); const s = nodeSize(id);
+        return { x: n.x + s.w / 2, y: n.y + s.h / 2 };
+    }
+    function edgeGeometry(a, b) {
+        const dx = b.x - a.x, dy = b.y - a.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        const bend = Math.min(48, dist * 0.16);
+        const cx = (a.x + b.x) / 2 - dy / dist * bend;
+        const cy = (a.y + b.y) / 2 + dx / dist * bend;
+        return {
+            d: `M${a.x},${a.y} Q${cx},${cy} ${b.x},${b.y}`,
+            mid: { x: (a.x + 2 * cx + b.x) / 4, y: (a.y + 2 * cy + b.y) / 4 }
+        };
+    }
+
+    /* ---------- Rendering ---------- */
+    function renderAll() {
+        nodesLayer.innerHTML = '';
+        edgeLayer.innerHTML = '';
+        defs.innerHTML = '';
+        nodeEls.clear(); edgeEls.clear();
+        state.nodes.forEach(n => nodesLayer.appendChild(createNodeEl(n)));
+        state.edges.forEach(e => edgeLayer.appendChild(createEdgeEl(e)));
+        state.edges.forEach(e => updateEdge(e.id));
+        updateSelectionClasses();
+        updateStats();
+        renderPanel();
+        save();
+    }
+
+    function createNodeEl(n) {
+        const el = document.createElement('div');
+        el.className = 'node';
+        el.dataset.id = n.id;
+        el.style.setProperty('--node-color', n.color);
+        el.style.transform = `translate(${n.x}px, ${n.y}px)`;
+        el.innerHTML = `<div class="avatar">${escapeHtml(initials(n.name))}</div>
+            <div class="meta"><div class="name">${escapeHtml(n.name)}</div><div class="role">${escapeHtml(n.role)}</div></div>
+            <div class="port" title="Drag to connect"></div>`;
+        nodeEls.set(n.id, el);
+        return el;
+    }
+    function refreshNodeEl(id) {
+        const n = nodeById(id), el = nodeEls.get(id);
+        if (!n || !el) return;
+        el.style.setProperty('--node-color', n.color);
+        el.querySelector('.avatar').textContent = initials(n.name);
+        el.querySelector('.name').textContent = n.name;
+        el.querySelector('.role').textContent = n.role;
+        el.style.transform = `translate(${n.x}px, ${n.y}px)`;
+        updateEdgesFor(id);
+    }
+
+    function createEdgeEl(e) {
+        const ns = 'http://www.w3.org/2000/svg';
+        const g = document.createElementNS(ns, 'g');
+        g.classList.add('edge-g'); g.dataset.id = e.id;
+        const grad = document.createElementNS(ns, 'linearGradient');
+        grad.id = 'grad-' + e.id; grad.setAttribute('gradientUnits', 'userSpaceOnUse');
+        const s1 = document.createElementNS(ns, 'stop'); s1.setAttribute('offset', '0');
+        const s2 = document.createElementNS(ns, 'stop'); s2.setAttribute('offset', '1');
+        grad.append(s1, s2); defs.appendChild(grad);
+        const hit = document.createElementNS(ns, 'path'); hit.classList.add('edge-hit');
+        const glow = document.createElementNS(ns, 'path'); glow.classList.add('edge-glow'); glow.setAttribute('stroke', `url(#grad-${e.id})`);
+        const line = document.createElementNS(ns, 'path'); line.classList.add('edge'); line.setAttribute('stroke', `url(#grad-${e.id})`);
+        const flow = document.createElementNS(ns, 'path'); flow.classList.add('edge-flow');
+        const lbg = document.createElementNS(ns, 'rect'); lbg.classList.add('edge-label-bg');
+        const label = document.createElementNS(ns, 'text'); label.classList.add('edge-label');
+        g.append(hit, glow, line, flow, lbg, label);
+        edgeEls.set(e.id, { g, hit, glow, line, flow, lbg, label, s1, s2, grad });
+        return g;
+    }
+    function updateEdge(id) {
+        const e = state.edges.find(x => x.id === id), els = edgeEls.get(id);
+        if (!e || !els) return;
+        const a = nodeCenter(e.from), b = nodeCenter(e.to);
+        const geo = edgeGeometry(a, b);
+        els.hit.setAttribute('d', geo.d); els.glow.setAttribute('d', geo.d);
+        els.line.setAttribute('d', geo.d); els.flow.setAttribute('d', geo.d);
+        els.grad.setAttribute('x1', a.x); els.grad.setAttribute('y1', a.y);
+        els.grad.setAttribute('x2', b.x); els.grad.setAttribute('y2', b.y);
+        els.s1.setAttribute('stop-color', nodeById(e.from).color);
+        els.s2.setAttribute('stop-color', nodeById(e.to).color);
+        if (e.label) {
+            els.label.textContent = e.label;
+            els.label.setAttribute('x', geo.mid.x); els.label.setAttribute('y', geo.mid.y);
+            const w = els.label.getComputedTextLength() + 18;
+            els.lbg.setAttribute('x', geo.mid.x - w / 2); els.lbg.setAttribute('y', geo.mid.y - 11);
+            els.lbg.setAttribute('width', w); els.lbg.setAttribute('height', 22);
+            els.label.style.display = ''; els.lbg.style.display = '';
+        } else { els.label.style.display = 'none'; els.lbg.style.display = 'none'; }
+        if (selected.type === 'edge' && selected.id === id) positionEdgeTool();
+    }
+    function updateEdgesFor(nodeId) {
+        state.edges.forEach(e => { if (e.from === nodeId || e.to === nodeId) updateEdge(e.id); });
+    }
+    function positionEdgeTool() {
+        const e = state.edges.find(x => x.id === selected.id);
+        if (!e) { edgeTool.classList.remove('show'); return; }
+        const geo = edgeGeometry(nodeCenter(e.from), nodeCenter(e.to));
+        const off = e.label ? 24 : 0;
+        edgeTool.style.transform = `translate(${geo.mid.x}px, ${geo.mid.y + off}px)`;
+        edgeTool.classList.add('show');
+    }
+
+    function updateSelectionClasses() {
+        nodeEls.forEach((el, id) => {
+            el.classList.toggle('selected', selected.type === 'node' && selected.id === id);
+            el.classList.toggle('link-source', linkFrom === id);
+        });
+        edgeEls.forEach((els, id) => els.g.classList.toggle('selected', selected.type === 'edge' && selected.id === id));
+        if (selected.type === 'edge') positionEdgeTool(); else edgeTool.classList.remove('show');
+        canvas.classList.toggle('linking', !!linkFrom);
+    }
+    function updateStats() {
+        $('statPeople').textContent = state.nodes.length;
+        $('statLinks').textContent = state.edges.length;
+        emptyState.hidden = state.nodes.length > 0;
+    }
+
+    /* ---------- Selection & panel ---------- */
+    function select(type, id) {
+        selected = type ? { type, id } : { type: null, id: null };
+        if (!type) linkFrom = null;
+        updateSelectionClasses();
+        renderPanel();
+    }
+    function renderPanel() {
+        if (selected.type === 'node') {
+            const n = nodeById(selected.id);
+            if (!n) { select(null); return; }
+            const links = state.edges.filter(e => e.from === n.id || e.to === n.id).map(e => {
+                const other = nodeById(e.from === n.id ? e.to : e.from);
+                return `<span class="chip" data-edge="${e.id}" data-node="${other.id}" title="Click to select connection"><i class="dot" style="background:${other.color}"></i>${escapeHtml(other.name)}<span class="x" data-remove="${e.id}" title="Remove connection">✕</span></span>`;
+            }).join('');
+            panel.innerHTML = `
+                <h3>Person <button class="close" id="panelClose" title="Close">×</button></h3>
+                <div class="field"><label>Name</label><input id="fName" value="${escapeHtml(n.name)}" placeholder="Full name" autocomplete="off"></div>
+                <div class="field"><label>Role / note</label><input id="fRole" value="${escapeHtml(n.role)}" placeholder="e.g. Designer, mentor, friend" autocomplete="off"></div>
+                <div class="field"><label>Color</label><div class="swatches">${COLORS.map(c => `<div class="swatch ${c === n.color ? 'on' : ''}" data-color="${c}" style="background:${c}"></div>`).join('')}</div></div>
+                <div class="field"><label>Connections (${links.length ? state.edges.filter(e => e.from === n.id || e.to === n.id).length : 0})</label>
+                    <div class="connections">${links || '<span class="hint">No connections yet. Pull the + handle to someone.</span>'}</div></div>
+                <div class="panel-actions">
+                    <button class="btn ${linkFrom === n.id ? 'active' : ''}" id="linkBtn">${linkFrom === n.id ? 'Click a person to connect… (Esc to cancel)' : '🔗 Connect to someone'}</button>
+                    <button class="btn danger" id="deleteNodeBtn">Remove person</button>
+                </div>`;
+            panel.classList.add('open');
+            $('panelClose').onclick = () => select(null);
+            $('fName').oninput = (ev) => { noteEdit(); n.name = ev.target.value; refreshNodeEl(n.id); save(); };
+            $('fRole').oninput = (ev) => { noteEdit(); n.role = ev.target.value; refreshNodeEl(n.id); save(); };
+            $('fName').onfocus = $('fRole').onfocus = beginEdit;
+            $('fName').onkeydown = $('fRole').onkeydown = (ev) => { if (ev.key === 'Enter') ev.target.blur(); };
+            panel.querySelectorAll('.swatch').forEach(sw => sw.onclick = () => {
+                pushUndo(); n.color = sw.dataset.color; refreshNodeEl(n.id); renderPanel(); save();
+            });
+            panel.querySelectorAll('.chip').forEach(chip => chip.onclick = (ev) => {
+                if (ev.target.dataset.remove) { removeEdge(ev.target.dataset.remove); return; }
+                select('edge', chip.dataset.edge);
+            });
+            $('linkBtn').onclick = () => {
+                linkFrom = linkFrom === n.id ? null : n.id;
+                updateSelectionClasses(); renderPanel();
+                if (linkFrom) showToast('Now click the person to connect to');
+            };
+            $('deleteNodeBtn').onclick = () => removeNode(n.id);
+        } else if (selected.type === 'edge') {
+            const e = state.edges.find(x => x.id === selected.id);
+            if (!e) { select(null); return; }
+            const a = nodeById(e.from), b = nodeById(e.to);
+            panel.innerHTML = `
+                <h3>Connection <button class="close" id="panelClose" title="Close">×</button></h3>
+                <div class="connections" style="margin:0 0 12px">
+                    <span class="chip" data-node="${a.id}"><i class="dot" style="background:${a.color}"></i>${escapeHtml(a.name)}</span>
+                    <span class="chip" data-node="${b.id}"><i class="dot" style="background:${b.color}"></i>${escapeHtml(b.name)}</span>
+                </div>
+                <div class="field"><label>Label (optional)</label><input id="fLabel" value="${escapeHtml(e.label)}" placeholder="e.g. reports to, friends, mentor" autocomplete="off"></div>
+                <div class="panel-actions">
+                    <button class="btn danger" id="deleteEdgeBtn">Remove connection</button>
+                </div>`;
+            panel.classList.add('open');
+            $('panelClose').onclick = () => select(null);
+            $('fLabel').oninput = (ev) => { noteEdit(); e.label = ev.target.value; updateEdge(e.id); save(); };
+            $('fLabel').onfocus = beginEdit;
+            $('fLabel').onkeydown = (ev) => { if (ev.key === 'Enter') ev.target.blur(); };
+            panel.querySelectorAll('.chip').forEach(chip => chip.onclick = () => select('node', chip.dataset.node));
+            $('deleteEdgeBtn').onclick = () => removeEdge(e.id);
+        } else {
+            panel.classList.remove('open');
+        }
+    }
+    // Text edits: snapshot on focus, commit to the undo stack on the first real change.
+    let editSnap = null;
+    function beginEdit() { editSnap = JSON.stringify(state); }
+    function noteEdit() {
+        if (editSnap === null) return;
+        if (undoStack[undoStack.length - 1] !== editSnap) { undoStack.push(editSnap); $('undoBtn').disabled = false; }
+        editSnap = null;
+    }
+
+    /* ---------- Mutations ---------- */
+    function addNode(wx, wy, opts) {
+        pushUndo();
+        const color = COLORS[state.nodes.length % COLORS.length];
+        const n = { id: uid(), name: (opts && opts.name) || 'New person', role: '', color, x: Math.round(wx - 95), y: Math.round(wy - 33) };
+        state.nodes.push(n);
+        const el = createNodeEl(n);
+        el.classList.add('pop');
+        nodesLayer.appendChild(el);
+        updateStats();
+        select('node', n.id);
+        const input = $('fName');
+        if (input) { input.focus(); input.select(); }
+        save();
+        return n;
+    }
+    function removeNode(id) {
+        pushUndo();
+        state.nodes = state.nodes.filter(n => n.id !== id);
+        state.edges = state.edges.filter(e => e.from !== id && e.to !== id);
+        select(null);
+        renderAll();
+        showToast('Person removed');
+    }
+    function addEdge(from, to, skipUndo) {
+        if (from === to) return null;
+        if (state.edges.some(e => (e.from === from && e.to === to) || (e.from === to && e.to === from))) {
+            showToast('Already connected'); return null;
+        }
+        if (!skipUndo) pushUndo();
+        const e = { id: uid(), from, to, label: '' };
+        state.edges.push(e);
+        edgeLayer.appendChild(createEdgeEl(e));
+        updateEdge(e.id);
+        updateStats();
+        save();
+        return e;
+    }
+    function removeEdge(id) {
+        pushUndo();
+        state.edges = state.edges.filter(e => e.id !== id);
+        const els = edgeEls.get(id);
+        if (els) { els.g.remove(); els.grad.remove(); edgeEls.delete(id); }
+        if (selected.type === 'edge' && selected.id === id) select(null); else renderPanel();
+        updateStats();
+        save();
+        showToast('Connection removed');
+    }
+    function clearAll() {
+        if (!state.nodes.length) return;
+        if (!confirm('Remove everyone from the map? You can undo this.')) return;
+        pushUndo();
+        state = { nodes: [], edges: [] };
+        select(null);
+        renderAll();
+    }
+
+    function autoLayout() {
+        if (!state.nodes.length) return;
+        pushUndo();
+        const adj = new Map(state.nodes.map(n => [n.id, []]));
+        state.edges.forEach(e => { adj.get(e.from).push(e.to); adj.get(e.to).push(e.from); });
+        const remaining = new Set(state.nodes.map(n => n.id));
+        const rings = [];
+        while (remaining.size) {
+            // Start each component from its most connected member.
+            const root = [...remaining].sort((a, b) => adj.get(b).length - adj.get(a).length)[0];
+            const levels = new Map([[root, 0]]);
+            const queue = [root];
+            remaining.delete(root);
+            while (queue.length) {
+                const cur = queue.shift();
+                adj.get(cur).forEach(nb => {
+                    if (remaining.has(nb)) { remaining.delete(nb); levels.set(nb, levels.get(cur) + 1); queue.push(nb); }
+                });
+            }
+            levels.forEach((lvl, id) => { (rings[lvl] = rings[lvl] || []).push(id); });
+        }
+        const positions = new Map();
+        const size = nodeSize(state.nodes[0].id);
+        rings.forEach((ids, lvl) => {
+            const count = ids.length;
+            // Ring radius grows with depth, and with headcount so cards never overlap.
+            const radius = lvl === 0 ? 0 : Math.max(lvl * 240, (count * 250) / (2 * Math.PI));
+            ids.forEach((id, i) => {
+                const angle = (i / count) * Math.PI * 2 - Math.PI / 2 + lvl * 0.35;
+                const r = lvl === 0 && count > 1 ? 120 : radius;
+                positions.set(id, { x: Math.cos(angle) * r, y: Math.sin(angle) * r });
+            });
+        });
+        nodesLayer.classList.add('animate');
+        state.nodes.forEach(n => {
+            const p = positions.get(n.id), s = nodeSize(n.id);
+            n.x = Math.round(p.x - (s.w || size.w) / 2); n.y = Math.round(p.y - (s.h || size.h) / 2);
+        });
+        const start = performance.now();
+        (function tick() {
+            state.nodes.forEach(n => {
+                const el = nodeEls.get(n.id);
+                el.style.transform = `translate(${n.x}px, ${n.y}px)`;
+            });
+            // Edges follow the animated node positions each frame.
+            state.nodes.forEach(n => {
+                const el = nodeEls.get(n.id);
+                const m = new DOMMatrixReadOnly(getComputedStyle(el).transform);
+                n._ax = m.e; n._ay = m.f;
+            });
+            state.edges.forEach(e => {
+                const a = nodeById(e.from), b = nodeById(e.to), sa = nodeSize(a.id), sb = nodeSize(b.id);
+                const geo = edgeGeometry({ x: a._ax + sa.w / 2, y: a._ay + sa.h / 2 }, { x: b._ax + sb.w / 2, y: b._ay + sb.h / 2 });
+                const els = edgeEls.get(e.id);
+                ['hit', 'glow', 'line', 'flow'].forEach(k => els[k].setAttribute('d', geo.d));
+            });
+            if (performance.now() - start < 650) requestAnimationFrame(tick);
+            else {
+                nodesLayer.classList.remove('animate');
+                state.nodes.forEach(n => { delete n._ax; delete n._ay; });
+                state.edges.forEach(e => updateEdge(e.id));
+                save();
+            }
+        })();
+        fitView(true);
+        showToast('Arranged around the most connected person');
+    }
+
+    /* ---------- Pointer interactions ---------- */
+    let drag = null; // { type: 'pan'|'node'|'link', ... }
+
+    canvas.addEventListener('pointerdown', (ev) => {
+        if (ev.button !== 0 && ev.pointerType === 'mouse') return;
+        const port = ev.target.closest('.port');
+        const nodeEl = ev.target.closest('.node');
+        const edgeG = ev.target.closest('.edge-g');
+        if (ev.target === edgeTool) return;
+        canvas.setPointerCapture(ev.pointerId);
+
+        if (port && nodeEl) {
+            const id = nodeEl.dataset.id;
+            drag = { type: 'link', from: id, moved: false };
+            tempEdge.style.display = '';
+            updateTempEdge(ev.clientX, ev.clientY);
+            nodeEl.classList.add('link-source');
+            ev.preventDefault();
+            return;
+        }
+        if (nodeEl) {
+            const id = nodeEl.dataset.id, n = nodeById(id);
+            if (linkFrom && linkFrom !== id) {
+                const e = addEdge(linkFrom, id);
+                linkFrom = null;
+                updateSelectionClasses();
+                if (e) { select('edge', e.id); showToast('Connected'); } else renderPanel();
+                drag = null;
+                return;
+            }
+            const w = toWorld(ev.clientX, ev.clientY);
+            drag = { type: 'node', id, dx: w.x - n.x, dy: w.y - n.y, moved: false, startX: ev.clientX, startY: ev.clientY };
+            nodeEls.forEach((el, nid) => { if (nid !== id) el.style.zIndex = ''; });
+            nodeEl.style.zIndex = 10;
+            ev.preventDefault();
+            return;
+        }
+        if (edgeG) {
+            select('edge', edgeG.dataset.id);
+            drag = null;
+            return;
+        }
+        drag = { type: 'pan', sx: ev.clientX, sy: ev.clientY, vx: view.x, vy: view.y, moved: false };
+        canvas.classList.add('panning');
+    });
+
+    canvas.addEventListener('pointermove', (ev) => {
+        if (!drag) return;
+        if (drag.type === 'pan') {
+            const dx = ev.clientX - drag.sx, dy = ev.clientY - drag.sy;
+            if (!drag.moved && Math.hypot(dx, dy) > 3) drag.moved = true;
+            if (drag.moved) { view.x = drag.vx + dx; view.y = drag.vy + dy; applyView(); }
+        } else if (drag.type === 'node') {
+            if (!drag.moved && Math.hypot(ev.clientX - drag.startX, ev.clientY - drag.startY) > 3) {
+                drag.moved = true; pushUndo();
+                nodeEls.get(drag.id).classList.add('dragging');
+            }
+            if (!drag.moved) return;
+            const n = nodeById(drag.id), w = toWorld(ev.clientX, ev.clientY);
+            n.x = Math.round(w.x - drag.dx); n.y = Math.round(w.y - drag.dy);
+            nodeEls.get(drag.id).style.transform = `translate(${n.x}px, ${n.y}px)`;
+            updateEdgesFor(drag.id);
+        } else if (drag.type === 'link') {
+            drag.moved = true;
+            updateTempEdge(ev.clientX, ev.clientY);
+            const target = hitNode(ev.clientX, ev.clientY);
+            nodeEls.forEach((el, id) => el.classList.toggle('link-target', !!target && target === id && id !== drag.from));
+        }
+    });
+
+    function endDrag(ev) {
+        if (!drag) return;
+        const d = drag; drag = null;
+        canvas.classList.remove('panning');
+        if (d.type === 'pan') {
+            if (!d.moved) select(null);
+        } else if (d.type === 'node') {
+            const el = nodeEls.get(d.id);
+            if (el) el.classList.remove('dragging');
+            if (d.moved) save(); else select('node', d.id);
+        } else if (d.type === 'link') {
+            tempEdge.style.display = 'none';
+            nodeEls.forEach(el => el.classList.remove('link-target'));
+            const src = nodeEls.get(d.from); if (src) src.classList.remove('link-source');
+            const target = hitNode(ev.clientX, ev.clientY);
+            if (target && target !== d.from) {
+                const e = addEdge(d.from, target);
+                if (e) { select('edge', e.id); showToast('Connected'); }
+            } else if (!target && d.moved && !ev.target.closest('.topbar, .panel, .zoombar, .tips')) {
+                const w = toWorld(ev.clientX, ev.clientY);
+                const n = addNode(w.x, w.y);
+                addEdge(d.from, n.id, true);
+                select('node', n.id);
+                const input = $('fName'); if (input) { input.focus(); input.select(); }
+                showToast('New person created and connected');
+            } else if (!d.moved) {
+                select('node', d.from);
+            }
+        }
+    }
+    canvas.addEventListener('pointerup', endDrag);
+    canvas.addEventListener('pointercancel', endDrag);
+
+    function hitNode(sx, sy) {
+        const els = document.elementsFromPoint(sx, sy);
+        for (const el of els) {
+            const n = el.closest && el.closest('.node');
+            if (n) return n.dataset.id;
+            if (el.closest && el.closest('.topbar, .panel, .zoombar')) return null;
+        }
+        return null;
+    }
+    function updateTempEdge(sx, sy) {
+        const a = nodeCenter(drag.from), b = toWorld(sx, sy);
+        tempEdge.setAttribute('d', edgeGeometry(a, b).d);
+    }
+
+    canvas.addEventListener('dblclick', (ev) => {
+        if (ev.target.closest('.node')) { const i = $('fName'); if (i) { i.focus(); i.select(); } return; }
+        if (ev.target.closest('.edge-g')) { const i = $('fLabel'); if (i) i.focus(); return; }
+        const w = toWorld(ev.clientX, ev.clientY);
+        addNode(w.x, w.y);
+    });
+
+    canvas.addEventListener('wheel', (ev) => {
+        ev.preventDefault();
+        if (ev.ctrlKey || ev.metaKey || !ev.deltaMode && Math.abs(ev.deltaY) < 50 && !Number.isInteger(ev.deltaY)) {
+            zoomAt(ev.clientX, ev.clientY, Math.exp(-ev.deltaY * 0.01));
+        } else {
+            zoomAt(ev.clientX, ev.clientY, ev.deltaY < 0 ? 1.12 : 1 / 1.12);
+        }
+    }, { passive: false });
+
+    // Pinch zoom for touch
+    const touches = new Map();
+    canvas.addEventListener('pointerdown', (ev) => { if (ev.pointerType === 'touch') touches.set(ev.pointerId, { x: ev.clientX, y: ev.clientY }); }, true);
+    canvas.addEventListener('pointermove', (ev) => {
+        if (ev.pointerType !== 'touch' || !touches.has(ev.pointerId)) return;
+        const prev = new Map(touches);
+        touches.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
+        if (touches.size === 2) {
+            drag = null;
+            const [a, b] = [...touches.values()], [pa, pb] = [...prev.values()];
+            const d0 = Math.hypot(pa.x - pb.x, pa.y - pb.y), d1 = Math.hypot(a.x - b.x, a.y - b.y);
+            const cx = (a.x + b.x) / 2, cy = (a.y + b.y) / 2, pcx = (pa.x + pb.x) / 2, pcy = (pa.y + pb.y) / 2;
+            view.x += cx - pcx; view.y += cy - pcy;
+            if (d0 > 0) zoomAt(cx, cy, d1 / d0); else applyView();
+        }
+    }, true);
+    const dropTouch = (ev) => touches.delete(ev.pointerId);
+    canvas.addEventListener('pointerup', dropTouch, true);
+    canvas.addEventListener('pointercancel', dropTouch, true);
+
+    edgeTool.addEventListener('pointerdown', (ev) => { ev.stopPropagation(); });
+    edgeTool.addEventListener('click', (ev) => { ev.stopPropagation(); if (selected.type === 'edge') removeEdge(selected.id); });
+
+    /* ---------- Keyboard ---------- */
+    document.addEventListener('keydown', (ev) => {
+        const typing = /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName);
+        if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 'z') { if (!typing) { ev.preventDefault(); undo(); } return; }
+        if (typing) { if (ev.key === 'Escape') document.activeElement.blur(); return; }
+        if (ev.key === 'Escape') { if (linkFrom) { linkFrom = null; updateSelectionClasses(); renderPanel(); } else select(null); }
+        if ((ev.key === 'Delete' || ev.key === 'Backspace') && selected.type) {
+            ev.preventDefault();
+            if (selected.type === 'node') removeNode(selected.id); else removeEdge(selected.id);
+        }
+        if (ev.key === 'n' || ev.key === 'N') { const w = toWorld(canvas.clientWidth / 2, canvas.clientHeight / 2); addNode(w.x + (Math.random() - 0.5) * 120, w.y + (Math.random() - 0.5) * 120); }
+        if (ev.key === 'f' || ev.key === 'F') fitView(true);
+        if (ev.key === 'l' || ev.key === 'L') autoLayout();
+    });
+
+    /* ---------- Toolbar ---------- */
+    $('addBtn').onclick = () => {
+        const w = toWorld(canvas.clientWidth / 2, canvas.clientHeight / 2);
+        addNode(w.x + (Math.random() - 0.5) * 160, w.y + (Math.random() - 0.5) * 120);
+    };
+    $('emptyAdd').onclick = () => { const w = toWorld(canvas.clientWidth / 2, canvas.clientHeight / 2); addNode(w.x, w.y); };
+    $('emptySeed').onclick = () => { pushUndo(); state = sampleData(); select(null); renderAll(); fitView(true); };
+    $('layoutBtn').onclick = autoLayout;
+    $('undoBtn').onclick = undo;
+    $('clearBtn').onclick = clearAll;
+    $('fitBtn').onclick = () => fitView(true);
+    $('zoomIn').onclick = () => zoomAt(canvas.clientWidth / 2, canvas.clientHeight / 2, 1.25);
+    $('zoomOut').onclick = () => zoomAt(canvas.clientWidth / 2, canvas.clientHeight / 2, 0.8);
+
+    $('exportBtn').onclick = () => {
+        const blob = new Blob([JSON.stringify({ version: 1, ...state }, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'mind-map.json';
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+        showToast('Exported mind-map.json');
+    };
+    $('importBtn').onclick = () => $('fileInput').click();
+    $('fileInput').onchange = (ev) => {
+        const file = ev.target.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            try {
+                const data = sanitize(JSON.parse(reader.result));
+                pushUndo(); state = data; select(null); renderAll(); fitView(true);
+                showToast(`Imported ${data.nodes.length} people, ${data.edges.length} connections`);
+            } catch (e) { showToast('That file is not a valid mind map'); }
+            ev.target.value = '';
+        };
+        reader.readAsText(file);
+    };
+
+    /* ---------- Theme ---------- */
+    const root = document.documentElement;
+    function applyTheme(t) {
+        if (t === 'light') root.setAttribute('data-theme', 'light'); else root.removeAttribute('data-theme');
+        $('themeBtn').textContent = t === 'light' ? '☀️' : '🌙';
+    }
+    let theme = 'dark';
+    try { theme = localStorage.getItem(THEME_KEY) || 'dark'; } catch (e) { /* ignore */ }
+    applyTheme(theme);
+    $('themeBtn').onclick = () => {
+        theme = theme === 'light' ? 'dark' : 'light';
+        applyTheme(theme);
+        try { localStorage.setItem(THEME_KEY, theme); } catch (e) { /* ignore */ }
+    };
+
+    /* ---------- Toast ---------- */
+    let toastTimer = null;
+    function showToast(msg) {
+        toast.textContent = msg;
+        toast.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove('show'), 1800);
+    }
+
+    /* ---------- Boot ---------- */
+    const hadSaved = load();
+    if (!hadSaved) state = sampleData();
+    renderAll();
+    if (hadSaved && view && Number.isFinite(view.k)) applyView(); else fitView(false);
+    window.addEventListener('resize', () => applyView());
+})();
+</script>
+</body>
+</html>
